@@ -2,27 +2,22 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#fffefa">
   <meta name="description" content="새하얀 종이 위 크레파스 그림으로 펼쳐지는 우리의 결혼 이야기.">
   <title>Our Happily Ever After | 모바일 청첩장</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500;1,600&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=mobile-swipe-2">
   <script src="data.js" defer></script>
-  <script src="app.js" defer></script>
-  <script src="storybook-art.js" defer></script>
+  <script src="app.js?v=mobile-swipe-2" defer></script>
+  <script src="storybook-art.js?v=mobile-swipe-2" defer></script>
 </head>
-<body> 
+<body>
   <div class="site-shell">
-    <header class="topbar">
-      <button class="wordmark" type="button" data-go="cover" aria-label="청첩장 표지로 이동">
-        <span class="wordmark-symbol" aria-hidden="true">✿</span>
-        <span>Happily Ever After</span>
+    <div class="home-toolbar">
+      <button type="button" class="home-button" id="homeBtn" data-go="cover" hidden aria-label="청첩장 첫 표지로 돌아가기">
+        <span aria-hidden="true">⌂</span> 처음으로
       </button>
-      <button class="easy-view-trigger" type="button" data-go="contents"><span aria-hidden="true">⌂</span> 예식 안내</button>
-    </header>
+    </div>
 
     <main class="main-area" id="mainArea">
       <div class="book-window" id="bookWindow">
@@ -44,12 +39,7 @@
       </div>
     </main>
 
-    <nav class="bottom-nav" aria-label="청첩장 페이지 이동">
-      <button type="button" class="nav-btn" id="prevBtn">← <span>이전 장</span></button>
-      <button type="button" class="nav-btn nav-toc" id="tocBtn" data-go="contents">⌂ <span>첫 페이지</span></button>
-      <button type="button" class="nav-btn nav-next" id="nextBtn"><span>다음 장</span> →</button>
-    </nav>
-    <p class="page-status" id="pageStatus" aria-live="polite">표지 · 0 / 6</p>
+    <p class="page-status" id="pageStatus" aria-live="polite">표지</p>
   </div>
 
   <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="웨딩 사진 크게 보기">
