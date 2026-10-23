@@ -475,58 +475,200 @@ h1,h2,h3,p { margin-top:0; }
   justify-content: flex-start;
 }
 
+
 /* ============================================================
-   VERTICAL RESPONSIVE COVER + TYPOGRAPHY (October 23, 2026)
-   CSS-only; keep the 3D book stage and the JS scaling behavior.
-   Responsive to viewport HEIGHT without shrinking long-screen text.
+   MOBILE-FIRST READABILITY & SWIPE NAVIGATION — 2026-10-24
+   Keep 3D flip animation and left/right crayon scene mapping intact.
    ============================================================ */
 
-/* The hardcover uses .cover-layout, not .page-inner.
-   Center the cover as one composition only on tall screens;
-   the tested original compact cover remains untouched below 800px. */
-@media (min-height: 800px) {
-  .cover-layout { justify-content: center; }
+/* Prevent a full-size 780px leaf from flashing before JS fits it. */
+.wedding-fit-js .site-shell:not(.layout-ready) .book-window { visibility: hidden; }
+
+/* Fit to the visible area of an in-app browser, including Kakao. */
+html, body { width:100%; max-width:100%; overflow-x:hidden; }
+.site-shell {
+  box-sizing: border-box;
+  width:100%;
+  height:var(--mobile-visible-height,100dvh);
+  min-height:0;
+  max-height:100dvh;
+  padding: max(5px, env(safe-area-inset-top)) 6px max(6px, env(safe-area-inset-bottom));
+  overflow:hidden;
+}
+.main-area { min-width:0; min-height:0; width:100%; flex:1 1 auto; justify-content:center; padding:0; }
+.book-fit-frame { flex:0 0 auto; max-width:100%; }
+.book-window { margin:0; }
+
+/* Only one navigation control: fixed-size home action above the book. */
+.home-toolbar {
+  z-index:30;
+  width:100%;
+  height:43px;
+  flex:0 0 43px;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  padding-right:5px;
+}
+.home-button {
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  gap:5px;
+  height:36px;
+  padding:0 13px;
+  border:1.5px solid #a9685c;
+  border-radius:99px;
+  background:#fff9f1;
+  color:#633c34;
+  font:700 13px/1.2 'Gowun Batang','Noto Serif KR',serif;
+  box-shadow:0 2px 5px #5438291f;
+}
+.home-button[hidden] { display:none !important; }
+.bottom-nav { display:none !important; }
+/* Live status for assistive technology, not visible navigation. */
+.page-status {
+  display:block !important;
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  margin:-1px !important;
+  overflow:hidden !important;
+  clip-path:inset(50%) !important;
+  white-space:nowrap;
+}
+
+/* Allow vertical scrolling of long pages while receiving horizontal swipes. */
+.book-window { touch-action:pan-y; }
+.page-inner { touch-action:pan-y; overscroll-behavior-y:contain; }
+
+/* Solid ink / no translucent text; compensate for fractional book scaling. */
+:root {
+  --ink:#342b29;
+  --muted:#615550;
+  --pink:#aa504d;
+  --sage:#4f705a;
+}
+.cover-title, .page-heading { color:#342b29; }
+.cover-title { line-height:1.15; font-weight:600; }
+.cover-prelude, .page-kicker, .contents-kicker { color:#526d52; }
+.page-heading { font-weight:600; }
+.page-subhead { color:#8a484b; font-weight:700; font-size:calc(14px * var(--type-boost,1)); }
+.cover-subtitle, .cover-venue, .cover-hint, .cover-swipe-hint { color:#574c44; }
+.cover-subtitle { font-weight:600; font-size:calc(13px * var(--type-boost,1)); }
+.cover-name { color:#342b29; font-size:calc(18px * var(--type-boost,1)); }
+.cover-date { color:#514138; }
+.cover-venue { font-size:calc(12px * var(--type-boost,1)); font-weight:600; }
+.cover-swipe-hint {
+  margin:12px 0 5px;
+  padding:8px 13px;
+  border:1px dashed #c28c77;
+  border-radius:99px;
+  background:#fffaef;
+  color:#805144;
+  font-weight:700;
+  font-size:calc(13px * var(--type-boost,1));
+  letter-spacing:-.01em;
+}
+
+.contents-names { font-size:calc(19px * var(--type-boost,1)); color:#342b29; }
+.contents-divider { font-size:calc(12px * var(--type-boost,1)); font-weight:600; color:#6e5551; }
+.contents-button {
+  border:2px solid #bd8f7e;
+  background:#fff9ef;
+  box-shadow:0 3px 0 #ddc1b2;
+  color:#372d29;
+  font-weight:700;
+}
+.contents-button-icon { color:#854643; background:#f2dcd1; }
+.contents-button-copy strong { color:#342b29; font-size:calc(14px * var(--type-boost,1)); font-weight:700; }
+.contents-button-copy small { color:#5f5148; font-size:calc(12px * var(--type-boost,1)); font-weight:600; }
+.contents-button .toc-no { color:#9a4f49; }
+.contents-button .button-arrow { display:none !important; }
+
+/* Reading type: at least 14-15px before overall stage scale. */
+.main-copy { color:#3b302e; font-size:calc(16px * var(--type-boost,1)); font-weight:500; line-height:1.9; }
+.muted, .account-hint { color:#554a43; font-size:calc(13px * var(--type-boost,1)); font-weight:500; }
+.date-big { color:#3f322c; font-weight:700; }
+.time-big { color:#8d3f42; font-weight:700; font-size:calc(19px * var(--type-boost,1)); }
+.info-box h3 { color:#3f302a; font-size:calc(16px * var(--type-boost,1)); }
+.info-box p { color:#584a42; font-size:calc(14px * var(--type-boost,1)); }
+.venue-eyebrow { color:#4e7058; }
+.venue-main-name { color:#3d302b; font-size:calc(19px * var(--type-boost,1)); }
+.venue-hall { color:#794841; font-size:calc(14px * var(--type-boost,1)); }
+.venue-address, .venue-parking p { color:#4c413b; font-size:calc(13px * var(--type-boost,1)); }
+.venue-section-heading h3 { color:#3c302c; font-size:calc(15px * var(--type-boost,1)); }
+.transit-line, .transit-station, .transit-walk,
+.bus-group-title, .bus-group p, .venue-bus-details > summary {
+  color:#50443d;
+  font-size:calc(12px * var(--type-boost,1));
+}
+.transit-number { font-size:calc(12px * var(--type-boost,1)); }
+.account-group > summary { color:#342c28; font-size:calc(14px * var(--type-boost,1)); }
+.account-row strong { color:#342c28; font-size:calc(13px * var(--type-boost,1)); }
+.account-row span { color:#50453d; font-size:calc(12px * var(--type-boost,1)); }
+.account-row button { font-size:calc(12px * var(--type-boost,1)); font-weight:700; }
+.gallery-pager, .gallery-body>.muted { color:#554641; font-size:calc(13px * var(--type-boost,1)); }
+.gallery-controls button, .page-action, .venue-link { font-size:calc(13px * var(--type-boost,1)); font-weight:700; }
+
+/* Maintain the original full illustration in the paper background layer. */
+.right-page-drawing { opacity:.21; }
+
+@media (min-height:800px) {
+  .cover-layout { justify-content:center; }
   .cover-illustration {
-    flex: 0 1 auto;
-    height: clamp(235px, 35dvh, 330px);
-    min-height: 170px;
-    max-height: 330px;
-    margin-top: 10px;
-    margin-bottom: 9px;
+    flex:0 1 auto;
+    height:clamp(215px,32dvh,328px);
+    min-height:155px;
+    margin:13px 0 12px;
   }
-  .cover-photo-frame {
-    width: min(100%, clamp(218px, 29dvh, 270px));
-    height: 100%;
-    max-height: 330px;
-  }
-  .cover-eyebrow { margin-top: auto; }
-  .cover-bottom { margin-bottom: auto; }
+  .cover-photo-frame { height:100%; width:min(100%,275px); }
+  .cover-eyebrow { margin-top:auto; }
+  .cover-bottom { margin-bottom:auto; }
+}
+@media (max-width:760px) {
+  .page-inner { padding:21px 25px 22px; }
+  .cover-title { font-size:clamp(50px,6.3dvh,64px); }
+  .page-heading { font-size:clamp(46px,5.4dvh,55px); }
+  .contents-buttons { gap:9px; }
+  .contents-button { min-height:78px; padding:10px; gap:8px; }
+  .contents-button-icon { width:34px; height:34px; flex:0 0 34px; }
+  .contents-button-copy { gap:2px; }
+}
+@media (max-width:360px) {
+  .page-inner { padding:18px 21px 19px; }
+  .contents-button { padding:9px 7px; gap:6px; }
+  .contents-button-icon { width:29px; height:29px; flex-basis:29px; }
+  .cover-layout { padding-left:23px; padding-right:23px; }
+}
+@media (max-height:690px) {
+  .cover-swipe-hint { margin-top:7px; }
+  .cover-illustration { min-height:135px; }
 }
 
-/* Page content already centers on tall screens, and stays scrollable
-   on small ones. Increase select sizes moderately rather than
-   increasing the whitespace-to-text ratio on tall devices. */
-@media (max-width: 760px) and (min-height: 800px) {
-  .cover-title {
-    font-size: clamp(57px, 6.75dvh, 67px);
-    line-height: 1.12;
-  }
-  .cover-prelude { font-size: clamp(29px, 3.4dvh, 34px); }
-  .cover-name { font-size: clamp(17px, 2.0dvh, 20px); }
-  .cover-date { font-size: clamp(23px, 2.8dvh, 28px); }
-  .cover-venue { font-size: clamp(11px, 1.4dvh, 13px); }
-  .cover-btn { font-size: clamp(12px, 1.48dvh, 14px); }
-
-  .page-heading { font-size: clamp(48px, 5.6dvh, 56px); }
-  .page-subhead { font-size: clamp(12px, 1.5dvh, 15px); }
-  .contents-names { font-size: clamp(17px, 2.1dvh, 21px); }
-  .contents-kicker { font-size: clamp(15px, 1.8dvh, 18px); }
-  .contents-button { min-height: clamp(78px, 9dvh, 92px); }
-  .contents-button-copy strong { font-size: clamp(12px, 1.5dvh, 15px); }
-  .contents-button-copy small { font-size: clamp(10px, 1.18dvh, 12px); }
-  .main-copy { font-size: clamp(13px, 1.5dvh, 15px); }
-  .date-big { font-size: clamp(38px, 4.5dvh, 45px); }
-  .time-big { font-size: clamp(17px, 2.0dvh, 20px); }
-  .chapter-photo { max-height: clamp(218px, 26dvh, 255px); }
+/* Keep the six table-of-contents choices visible on normal phone heights.
+   An explicit photo height prevents a portrait image from stretching a
+   4:3 card and pushing the final two buttons below the book's edge. */
+.page-contents .contents-photo-card {
+  flex:0 0 174px;
+  width:min(100%,225px);
+  height:174px;
+  aspect-ratio:auto;
+  margin-bottom:12px;
 }
-
+.page-contents .contents-feature-photo { height:100%; object-fit:cover; }
+@media (max-height:730px) {
+  .page-contents .contents-photo-card {
+    flex-basis:145px;
+    width:min(100%,190px);
+    height:145px;
+    margin-bottom:7px;
+  }
+  .page-contents .contents-layout { padding-top:3px; padding-bottom:3px; }
+  .page-contents .contents-flourish { margin:3px 0 5px; }
+  .page-contents .contents-divider { margin-bottom:5px; }
+  .page-contents .contents-buttons { margin-top:2px; gap:7px; }
+  .page-contents .contents-button { min-height:70px; padding:8px; }
+  .page-contents .contents-botanical { height:26px; margin-top:5px; }
+}
