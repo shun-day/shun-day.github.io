@@ -6,19 +6,17 @@
   <meta name="theme-color" content="#fffefa">
   <meta name="description" content="새하얀 종이 위 크레파스 그림으로 펼쳐지는 우리의 결혼 이야기.">
   <title>Our Happily Ever After | 모바일 청첩장</title>
-  <link rel="stylesheet" href="styles.css?v=mobile-swipe-2">
+  <!-- Restore the exact font stylesheet loaded by the original invitation. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=inside-home-type-3">
   <script src="data.js" defer></script>
-  <script src="app.js?v=mobile-swipe-2" defer></script>
-  <script src="storybook-art.js?v=mobile-swipe-2" defer></script>
+  <script src="app.js?v=inside-home-type-3" defer></script>
+  <script src="storybook-art.js?v=inside-home-type-3" defer></script>
 </head>
 <body>
   <div class="site-shell">
-    <div class="home-toolbar">
-      <button type="button" class="home-button" id="homeBtn" data-go="cover" hidden aria-label="청첩장 첫 표지로 돌아가기">
-        <span aria-hidden="true">⌂</span> 처음으로
-      </button>
-    </div>
-
     <main class="main-area" id="mainArea">
       <div class="book-window" id="bookWindow">
         <div class="book" id="book" data-closed="true" aria-label="책장 넘기는 모바일 청첩장">
