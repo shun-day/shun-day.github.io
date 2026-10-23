@@ -24,8 +24,8 @@ const WEDDING = {
 // 예: { src: 'images/photo01.jpg', alt: '햇살 아래 함께 웃는 신랑 신부' }
 const IMAGE_BASE = './images/MYBOX/';
 const PHOTOS = [
-  { src: `${IMAGE_BASE}HSY_2860.jpg`, alt: '웨딩 사진 01' },
-  { src: `${IMAGE_BASE}HSY_2993.jpg`, alt: '웨딩 사진 02' },
+  { src: `${IMAGE_BASE}HSY_2860.JPG`, alt: '웨딩 사진 01' },
+  { src: `${IMAGE_BASE}HSY_2993.JPG`, alt: '웨딩 사진 02' },
   { src: '', alt: '웨딩 사진 03' },
   { src: '', alt: '웨딩 사진 04' },
   { src: '', alt: '웨딩 사진 05' },
@@ -67,7 +67,7 @@ const BOOK_IMAGES = {
   contents: `${IMAGE_BASE}HSY_2622.JPG`,
 
   chapter: {
-    story: `${IMAGE_BASE}AAC_0403.JPG`,
+    story: `${IMAGE_BASE}AAC_0403.jpg`,
     day: `${IMAGE_BASE}HSY_2087.JPG`,
     venue: `${IMAGE_BASE}HSY_2308.JPG`,
     gallery: `${IMAGE_BASE}HSY_2922.JPG`,
