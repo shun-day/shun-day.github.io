@@ -1,5 +1,8 @@
 'use strict';
 
+// Allows CSS to hide the oversized pre-fit book only while this JS is active.
+document.documentElement.classList.add('wedding-fit-js');
+
 /* ============================================================
    밝은 클래식 동화책 청첩장 V5
    - 표지/본문 양면 책장 애니메이션
@@ -8,7 +11,7 @@
    - 펼친 첫 장에 예식 핵심정보와 목차 결합
    - 사진 20장(4장씩 5면) + 6개 계좌정보 자리
    ============================================================ */
-
+ 
 
 const CHAPTERS = [
   {
@@ -151,8 +154,8 @@ function coverMarkup() {
       <p class="cover-name">${enc(WEDDING.bride)} <span>&</span> ${enc(WEDDING.groom)}</p>
       <div class="cover-date">${enc(humanDate())}</div>
       <div class="cover-venue">${enc(WEDDING.timeLabel)} · ${enc(WEDDING.venue)}</div>
-      <button type="button" class="cover-btn" data-go="contents">우리 이야기 펼치기 <span aria-hidden="true">→</span></button>
-      <p class="cover-hint">표지를 넘기면 결혼식 이야기가 시작돼요.</p>
+      <p class="cover-swipe-hint">← 왼쪽으로 밀어서 책을 펼쳐보세요</p>
+      
     </div>
   </div>`;
 }
@@ -549,15 +552,23 @@ function hashToId() {
 }
 
 function updateNav(){
-  const i=nextIndex(current);
-  $('prevBtn').disabled=i===0;
-  $('nextBtn').disabled=i===PAGE_IDS.length-1;
-  $('nextBtn').querySelector('span').textContent=current==='cover'?'책 펼치기':'다음 장';
-  $('pageStatus').textContent=current==='cover'?'표지':current==='contents'?'예식 안내 · 바로가기':`${chById(current).ko} · ${i-1} / ${CHAPTERS.length}`;
-  book.dataset.closed=String(current==='cover');
-  if(current==='cover')rightPage.setAttribute('inert',''); else rightPage.removeAttribute('inert');
-  hardCover.setAttribute('aria-hidden',current==='cover'?'false':'true');
+  book.dataset.closed = String(current === 'cover');
+  if (current === 'cover') rightPage.setAttribute('inert', '');
+  else rightPage.removeAttribute('inert');
+  hardCover.setAttribute('aria-hidden', current === 'cover' ? 'false' : 'true');
+
+  const home = $('homeBtn');
+  if (home) home.hidden = current === 'cover';
+
+  const status = $('pageStatus');
+  if (status) {
+    const chapter = chById(current);
+    status.textContent = current === 'cover' ? '표지'
+      : current === 'contents' ? '예식 안내 바로가기'
+      : `${chapter?.ko || ''} · ${nextIndex(current) - 1} / ${CHAPTERS.length}`;
+  }
 }
+
 function finish(target){
   current=target;
   if(target==='cover')book.dataset.closed='true';
@@ -666,18 +677,11 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('button,a');
   if(!el)return;
   
-  if (el.id === 'tocBtn') {
-    go('cover');
-    return;
-  }
-
   if (el.dataset.go) {
     go(el.dataset.go);
     return;
   }
 
-  if(el.id==='prevBtn'){go(PAGE_IDS[Math.max(0,nextIndex(current)-1)]);return;}
-  if(el.id==='nextBtn'){go(PAGE_IDS[Math.min(PAGE_IDS.length-1,nextIndex(current)+1)]);return;}
   if(el.dataset.galleryMove){
     galleryPage=Math.max(0,Math.min(galleryPageCount-1,galleryPage+Number(el.dataset.galleryMove)));
     if(current==='gallery'){rightPage.innerHTML=rightMarkup('gallery');}
@@ -707,6 +711,64 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'){e.preventDefault();go(PAGE_IDS[Math.min(PAGE_IDS.length-1,nextIndex(current)+1)]);}
   if(e.key==='ArrowLeft'){e.preventDefault();go(PAGE_IDS[Math.max(0,nextIndex(current)-1)]);}
 });
+// Swipe a book page left/right without interfering with vertical scrolling.
+// Interactive controls stay tappable; fast horizontal gallery-photo gestures
+// are also recognized without opening the photo lightbox.
+(() => {
+  const surface = $('bookWindow');
+  if (!surface) return;
+
+  let start = null;
+  let suppressClickUntil = 0;
+
+  surface.addEventListener('touchstart', e => {
+    if (turning || e.touches.length !== 1 || !$('lightbox').hidden) {
+      start = null;
+      return;
+    }
+    if (e.target instanceof Element &&
+        e.target.closest('a, summary, input, textarea, select, [data-account-side], [data-gallery-move], #calendarBtn')) {
+      start = null;
+      return;
+    }
+    const touch = e.changedTouches[0];
+    start = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+  }, {passive: true});
+
+  surface.addEventListener('touchend', e => {
+    if (!start || e.changedTouches.length !== 1) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    start = null;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.35) return;
+
+    // Prevent a swipe starting on a photo or menu tile from becoming a tap.
+    if (e.cancelable) e.preventDefault();
+    suppressClickUntil = Date.now() + 450;
+    const next = Math.max(0, Math.min(PAGE_IDS.length - 1,
+      nextIndex(current) + (dx < 0 ? 1 : -1)));
+    if (PAGE_IDS[next] !== current) go(PAGE_IDS[next]);
+  }, {passive: false});
+
+  surface.addEventListener('touchcancel', () => { start = null; }, {passive: true});
+  surface.addEventListener('click', e => {
+    if (Date.now() < suppressClickUntil) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      suppressClickUntil = 0;
+    }
+  }, true);
+
+  // A tap on the cover is also supported for desktop and accessibility,
+  // with no visible page-turn button.
+  surface.addEventListener('click', e => {
+    if (current !== 'cover' || turning) return;
+    if (e.target instanceof Element && e.target.closest('a,button')) return;
+    go('contents');
+  });
+})();
+
 // 사진 확대 중 스와이프로 이전/다음
 let touchStartX=null;
 $('lightbox').addEventListener('touchstart',e=>{touchStartX=e.changedTouches[0]?.screenX ?? null;},{passive:true});
@@ -734,128 +796,53 @@ updateNav();
 
 
 /* =====================================================
-   Responsive Book Stage
+   Responsive Book Stage — Mobile first / Kakao in-app safe
+   The visible leaf always fits the available viewport at open.
    ===================================================== */
-
 (() => {
   const LEAF_W = 390;
-  const LEAF_H = 670;
-
   const win = $('bookWindow');
   const main = $('mainArea');
   const shell = document.querySelector('.site-shell');
-  const header = document.querySelector('.topbar');
-  const nav = document.querySelector('.bottom-nav');
-  const status = $('pageStatus');
+  if (!win || !main || !shell) return;
 
-  if (!win || !main || !shell || !header || !nav || !status) {
-    return;
-  }
-
-  // 책을 축소할 외부 프레임
-  const frame = document.createElement('div');
-  frame.className = 'book-fit-frame';
-
-  win.before(frame);
-  frame.append(win);
-
-  // 제목 + 책 + 하단 버튼을 한 그룹으로 배치
-  main.prepend(header);
-  main.append(nav, status);
-
-  // 상단 중복 바로가기 제거
-  document.querySelector('.easy-view-trigger')?.remove();
-
-  const titleBtn = document.querySelector('button.wordmark');
-
-  if (titleBtn) {
-    const label = document.createElement('div');
-    label.className = 'wordmark';
-    label.innerHTML = titleBtn.innerHTML;
-    titleBtn.replaceWith(label);
+  let frame = win.parentElement;
+  if (!frame?.classList.contains('book-fit-frame')) {
+    frame = document.createElement('div');
+    frame.className = 'book-fit-frame';
+    win.before(frame);
+    frame.append(win);
   }
 
   let raf = 0;
-
   const px = value => parseFloat(value) || 0;
 
-  
   function fit() {
     raf = 0;
+    // The visible viewport may differ from CSS 100vh in Kakao / iOS.
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const usableHeight = Math.max(270, Math.round(viewportHeight));
+    shell.style.setProperty('--mobile-visible-height', `${usableHeight}px`);
 
+    const mobile = document.documentElement.clientWidth <= 760;
+    const designWidth = mobile ? LEAF_W : 2 * LEAF_W;
     const mainStyle = getComputedStyle(main);
-    const px = value => parseFloat(value) || 0;
+    const availableWidth = Math.max(1, main.clientWidth - px(mainStyle.paddingLeft) - px(mainStyle.paddingRight));
+    const availableHeight = Math.max(1, main.clientHeight - px(mainStyle.paddingTop) - px(mainStyle.paddingBottom));
 
-    const isMobile =
-      document.documentElement.clientWidth <= 760;
+    // Never grow the book beyond the viewport width on first render.
+    const scale = Math.min(mobile ? 1 : 1.15, availableWidth / designWidth);
+    const leafHeight = Math.min(950, Math.max(300, Math.floor((availableHeight - 2) / scale)));
 
-    const designWidth = isMobile
-      ? LEAF_W
-      : LEAF_W * 2;
-
-    // 1. 가로 사용 가능 영역
-    const availableWidth = Math.max(
-      1,
-      main.clientWidth -
-      px(mainStyle.paddingLeft) -
-      px(mainStyle.paddingRight) -
-      8
-    );
-
-    // 2. 세로 사용 가능 영역
-    const navMarginTop =
-      parseFloat(getComputedStyle(nav).marginTop) || 0;
-
-    const availableHeight = Math.max(
-      1,
-      main.clientHeight -
-      nav.offsetHeight -
-      navMarginTop -
-      8
-    );
-
-    // 3. 책의 가로 배율만 계산
-    const scale = Math.min(
-      1.15,
-      availableWidth / designWidth
-    );
-
-    // 4. 남은 화면 높이에 맞춰 책의 실제 높이를 변경
-    // 고정 670px 대신 동적 페이지 높이 적용
-    const pageHeight = Math.min(
-      950,
-      Math.max(1, availableHeight / scale)
-    );
-
-    // 5. 바깥 컨테이너에만 scale 적용
-    win.style.setProperty(
-      '--fit-scale',
-      String(scale)
-    );
-
-    // 책의 실제 논리적 높이
-    win.style.setProperty(
-      '--adaptive-leaf-height',
-      `${pageHeight}px`
-    );
-
-    // 화면에 표시되는 책 크기
-    frame.style.setProperty(
-      '--fit-width',
-      `${designWidth * scale}px`
-    );
-
-    frame.style.setProperty(
-      '--fit-height',
-      `${pageHeight * scale}px`
-    );
-
-    shell.style.setProperty(
-      '--scaled-book-width',
-      `${designWidth * scale}px`
-    );
+    win.style.setProperty('--fit-scale', String(scale));
+    win.style.setProperty('--adaptive-leaf-height', `${leafHeight}px`);
+    frame.style.setProperty('--fit-width', `${Math.floor(designWidth * scale)}px`);
+    frame.style.setProperty('--fit-height', `${Math.floor(leafHeight * scale)}px`);
+    shell.style.setProperty('--scaled-book-width', `${Math.floor(designWidth * scale)}px`);
+    // Increase text on narrow devices to compensate for scale() shrinkage.
+    win.style.setProperty('--type-boost', String(Math.min(1.23, Math.max(1, 1 / scale))));
+    shell.classList.add('layout-ready');
   }
-
 
   function queueFit() {
     if (raf) return;
@@ -863,14 +850,8 @@ updateNav();
   }
 
   queueFit();
-
   window.addEventListener('resize', queueFit);
   window.addEventListener('orientationchange', queueFit);
-
-  window.visualViewport?.addEventListener(
-    'resize',
-    queueFit
-  );
-
+  window.visualViewport?.addEventListener('resize', queueFit);
   document.fonts?.ready.then(queueFit);
 })();
