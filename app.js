@@ -11,7 +11,7 @@ document.documentElement.classList.add('wedding-fit-js');
    - 펼친 첫 장에 예식 핵심정보와 목차 결합
    - 사진 20장(4장씩 5면) + 6개 계좌정보 자리
    ============================================================ */
- 
+
 
 const CHAPTERS = [
   {
@@ -90,7 +90,11 @@ function wrapPage(markup, pageId = 'contents') {
       <canvas class="right-page-drawing" data-crayon="${scene}"></canvas>
     </div>
     ${markup}
-  </div>`;
+  </div>
+  <nav class="page-top-nav" aria-label="페이지 바로가기">
+    <button type="button" class="page-home-button" data-go="cover" aria-label="첫 페이지로 돌아가기">⌂첫페이지로</button>
+    <button type="button" class="page-toc-button" data-go="contents" aria-label="목차로 이동">목차☷</button>
+  </nav>`;
 }
 
 function illustration(id, cls = 'chapter-photo') {
@@ -247,7 +251,6 @@ function contentsMarkup() {
       ${TOC_BUTTONS.map((item,i)=>`<button type="button" class="contents-button" data-go="${item.id}" aria-label="${item.text} 페이지로 이동">
         <span class="contents-button-icon">${inkIcon(item.icon)}</span>
         <span class="contents-button-copy">
-          <span class="toc-no">${String(i+1).padStart(2,'0')}</span>
           <strong>${item.text}</strong>
           <small>${item.desc}</small>
         </span>
@@ -556,9 +559,6 @@ function updateNav(){
   if (current === 'cover') rightPage.setAttribute('inert', '');
   else rightPage.removeAttribute('inert');
   hardCover.setAttribute('aria-hidden', current === 'cover' ? 'false' : 'true');
-
-  const home = $('homeBtn');
-  if (home) home.hidden = current === 'cover';
 
   const status = $('pageStatus');
   if (status) {
