@@ -9,32 +9,25 @@
   <!-- Restore the exact font stylesheet loaded by the original invitation. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=inside-home-type-3">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&amp;family=Cormorant+Garamond:wght@400;500;600;700&amp;family=Gowun+Batang:wght@400;700&amp;family=Noto+Serif+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=no-intro-v2">
+  <link rel="stylesheet" href="guestbook.css?v=single-leaf-v1">
   <script src="data.js" defer></script>
-  <script src="app.js?v=inside-home-type-3" defer></script>
-  <script src="storybook-art.js?v=inside-home-type-3" defer></script>
+  <script src="app.js?v=no-intro-v2" defer></script>
+  <script src="storybook-art.js?v=single-leaf-v1" defer></script>
+  <!-- Supabase loads only when the guestbook is opened. -->
+  <script src="guestbook-config.js?v=2" defer></script>
+  <script src="guestbook.js?v=single-leaf-v1" defer></script>
 </head>
 <body>
   <div class="site-shell">
     <main class="main-area" id="mainArea">
       <div class="book-window" id="bookWindow">
-        <div class="book" id="book" data-closed="true" aria-label="책장 넘기는 모바일 청첩장">
-          <div class="book-board board-left" aria-hidden="true"></div>
-          <div class="book-board board-right" aria-hidden="true"></div>
-          <div class="book-spine" aria-hidden="true"></div>
-          <div class="paper-page left-page" id="leftPage" aria-hidden="true"></div>
+        <div class="book single-leaf" id="book" data-closed="true" aria-label="한 장씩 넘기는 모바일 청첩장">
           <div class="paper-page right-page" id="rightPage"></div>
-          <div class="flip-sheet" id="flipSheet" aria-hidden="true">
-            <div class="sheet-face sheet-front" id="sheetFront"></div>
-            <div class="sheet-face sheet-back" id="sheetBack"></div>
-          </div>
-          <div class="hard-cover" id="hardCover" aria-hidden="false">
-            <div class="hard-face hard-front" id="coverFront"></div>
-            <div class="hard-face hard-inside" id="coverInside" aria-hidden="true"></div>
-          </div>
         </div>
       </div>
+
     </main>
 
     <p class="page-status" id="pageStatus" aria-live="polite">표지</p>

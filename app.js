@@ -5,7 +5,7 @@ document.documentElement.classList.add('wedding-fit-js');
 
 /* ============================================================
    밝은 클래식 동화책 청첩장 V5
-   - 표지/본문 양면 책장 애니메이션
+   - 단면 책 페이지 + 가벼운 전환 애니메이션
    - 버튼만 눌러도 순서대로 읽을 수 있음
    - 목차에서 개별 챕터로 직접 이동
    - 펼친 첫 장에 예식 핵심정보와 목차 결합
@@ -39,6 +39,12 @@ const CHAPTERS = [
     intro: '함께한 순간들이 한 권의 추억이 됩니다.'
   },
   {
+    id: 'guestbook',
+    ko: '축하 방명록',
+    en: 'Guestbook',
+    intro: '따뜻한 축하의 말을 한 장씩 모았습니다.'
+  },
+  {
     id: 'love',
     ko: '마음 전하기',
     en: 'With Love',
@@ -47,15 +53,10 @@ const CHAPTERS = [
 ];
 
 const PAGE_IDS = ['cover', 'contents', ...CHAPTERS.map(item=>item.id)];
-const PAGE_TIME = 920;
+const PAGE_TIME = 390;
 const $ = id => document.getElementById(id);
 const book = $('book');
 const rightPage = $('rightPage');
-const leftPage = $('leftPage');
-const hardCover = $('hardCover');
-const flipSheet = $('flipSheet');
-const sheetFront = $('sheetFront');
-const sheetBack = $('sheetBack');
 const isReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const enc = v => String(v ?? '').replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const chById = id => CHAPTERS.find(c => c.id === id);
@@ -67,6 +68,7 @@ const galleryPageCount = Math.ceil(PHOTOS.length / 4);
 let current = 'cover';
 let pending = null;
 let turning = false;
+let animationToken = 0;
 let galleryPage = 0;
 let lightboxIndex = -1;
 let lastLightboxFocus = null;
@@ -83,7 +85,9 @@ function chapterHeader(en, ko) {
 // The right-hand drawing MUST use the exact same scene key as the left leaf.
 // storybook-art.js recognizes garden, story, day, venue, gallery and love.
 function wrapPage(markup, pageId = 'contents') {
-  const scene = pageId === 'contents' ? 'garden' : pageId;
+  // Guestbook reuses the existing 'love' crayon art (storybook-art.js
+  // does not define a 'guestbook' scene).
+  const scene = pageId === 'contents' ? 'garden' : pageId === 'guestbook' ? 'love' : pageId;
 
   return `<div class="page-inner page-${pageId}">
     <div class="right-page-art" aria-hidden="true">
@@ -92,8 +96,8 @@ function wrapPage(markup, pageId = 'contents') {
     ${markup}
   </div>
   <nav class="page-top-nav" aria-label="페이지 바로가기">
-    <button type="button" class="page-home-button" data-go="cover" aria-label="첫 페이지로 돌아가기">⌂첫페이지로</button>
-    <button type="button" class="page-toc-button" data-go="contents" aria-label="목차로 이동">목차☷</button>
+    <button type="button" class="page-home-button" data-go="cover" aria-label="첫 페이지로 돌아가기">⌂ 첫페이지로</button>
+    <button type="button" class="page-toc-button" data-go="contents" aria-label="목차로 이동">목차 ☷</button>
   </nav>`;
 }
 
@@ -164,27 +168,6 @@ function coverMarkup() {
   </div>`;
 }
 
-function insideMarkup() {
-  return `<div class="inside-art">
-    <span class="inside-kicker">ONCE UPON A TIME</span>
-    <canvas class="crayon-scene" data-crayon="garden" aria-hidden="true"></canvas>
-    <div class="inside-quote">And so our<br>story begins...</div>
-    <p>서로의 하루가 만나<br>한 권의 이야기가 되었습니다.</p>
-    <div class="inside-flourish" aria-hidden="true">❀ · ❀</div>
-  </div>`;
-}
-
-function leftMarkup(id) {
-  if(id==='contents') return insideMarkup();
-  const ch = chById(id);
-  if(!ch) return insideMarkup();
-  return `<div class="left-illustration">
-    <div class="folio">CHAPTER ${String(CHAPTERS.indexOf(ch)+1).padStart(2,'0')}</div>
-    <canvas class="crayon-scene" data-crayon="${enc(id)}" aria-hidden="true"></canvas>
-    <h3>${ch.en}</h3><p>${ch.intro}</p>
-    <span class="flourish" aria-hidden="true">~ ❀ ~</span>
-  </div>`;
-}
 function accountRow(account, side, index) {
   const filled = Boolean(account.bank && account.number && account.holder);
   return `<div class="account-row"><div><strong>${enc(account.label)}</strong>
@@ -217,7 +200,7 @@ const TOC_BUTTONS = [
   {id:'day', text:'예식 일시', icon:'calendar', desc:'날짜와 시간'},
   {id:'venue', text:'오시는 길', icon:'pin', desc:'예식장 안내'},
   {id:'gallery', text:'우리의 사진', icon:'photo', desc:'웨딩 앨범'},
-  {id:'venue', text:'주차 · 교통', icon:'car', desc:'주차와 버스'},
+  {id:'guestbook', text:'방명록 남기기', icon:'message', desc:'축하의 한마디'},
   {id:'love', text:'마음 전하기', icon:'heart', desc:'축하의 마음'}
 ];
 
@@ -228,6 +211,7 @@ function inkIcon(name){
     photo:'<rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m4 18 5-5 4 3 3-4 5 6"/>',
     car:'<path d="m5 11 2-6h10l2 6M4 16v-5h16v5M4 16h16M7 16v2M17 16v2"/><circle cx="7" cy="14" r="1"/><circle cx="17" cy="14" r="1"/>',
     heart:'<path d="M20 8.6c0 4.3-8 10.3-8 10.3S4 12.9 4 8.6C4 3.5 10.1 3.4 12 7c1.9-3.6 8-3.5 8 1.6Z"/>',
+    message:'<path d="M20 16a3 3 0 0 1-3 3H9l-5 3v-4a3 3 0 0 1-2-3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3z"/><path d="M7 9h10M7 13h7"/>',
     letter:'<rect x="3" y="6" width="18" height="13" rx="1"/><path d="m3 8 9 7 9-7"/>'
   };
   return `<svg class="ink-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${paths[name]||''}</svg>`;
@@ -248,13 +232,12 @@ function contentsMarkup() {
     </div>` : ''}
     <p class="contents-divider">원하시는 메뉴를 버튼처럼 바로 눌러보세요</p>
     <nav class="contents-buttons" aria-label="예식 안내 목차">
-      ${TOC_BUTTONS.map((item,i)=>`<button type="button" class="contents-button" data-go="${item.id}" aria-label="${item.text} 페이지로 이동">
+      ${TOC_BUTTONS.map(item=>`<button type="button" class="contents-button" data-go="${item.id}" aria-label="${item.text} 페이지로 이동">
         <span class="contents-button-icon">${inkIcon(item.icon)}</span>
         <span class="contents-button-copy">
           <strong>${item.text}</strong>
           <small>${item.desc}</small>
         </span>
-        <span class="button-arrow" aria-hidden="true">›</span>
       </button>`).join('')}
     </nav>
     <canvas class="contents-botanical" data-crayon="botanical" aria-hidden="true"></canvas>
@@ -534,6 +517,16 @@ function rightMarkup(id) {
       ${lowerNav()}
     `, id);
   }
+  if (id === 'guestbook') {
+    return wrapPage(`
+      ${chapterHeader('Guestbook', '축하 방명록')}
+      <div class="page-body guestbook-body">
+        <div class="guestbook-mount" aria-label="축하 방명록">
+          <p class="guestbook-loading" role="status">방명록을 준비하고 있습니다.</p>
+        </div>
+      </div>
+    `, id);
+  }
   if(id==='love') return wrapPage(`${chapterHeader('With Love','마음 전하기')}<div class="page-body">
     ${illustration('love')}<p class="account-hint">마음을 전하실 분들을 위해 안내드립니다.<br>신랑측 · 신부측을 눌러 확인해 주세요.</p>
     ${accountGroup('bride')}${accountGroup('groom')}
@@ -554,64 +547,93 @@ function hashToId() {
   return PAGE_IDS.includes(id) ? id : 'cover';
 }
 
+// A single permanent page remains mounted. During a swipe we rotate only
+// a temporary paper leaf, not the old two-page 3D book assembly.
 function updateNav(){
   book.dataset.closed = String(current === 'cover');
-  if (current === 'cover') rightPage.setAttribute('inert', '');
-  else rightPage.removeAttribute('inert');
-  hardCover.setAttribute('aria-hidden', current === 'cover' ? 'false' : 'true');
-
   const status = $('pageStatus');
-  if (status) {
+  if(status){
     const chapter = chById(current);
     status.textContent = current === 'cover' ? '표지'
       : current === 'contents' ? '예식 안내 바로가기'
-      : `${chapter?.ko || ''} · ${nextIndex(current) - 1} / ${CHAPTERS.length}`;
+      : `${chapter?.ko || ''} · ${nextIndex(current)-1} / ${CHAPTERS.length}`;
   }
 }
-
-function finish(target){
-  current=target;
-  if(target==='cover')book.dataset.closed='true';
-  else {rightPage.innerHTML=rightMarkup(target);leftPage.innerHTML=leftMarkup(target);rightPage.scrollTop=0;leftPage.scrollTop=0;book.dataset.closed='false';}
-  hardCover.className='hard-cover'+(target==='cover'?'':' is-open');
-  flipSheet.className='flip-sheet';
-  sheetFront.innerHTML='';sheetBack.innerHTML='';
-  book.classList.remove('is-turning');
-  book.classList.add('is-settling');
-  turning=false;
+function pageHTML(target){
+  return target === 'cover' ? coverMarkup() : rightMarkup(target);
+}
+function renderPage(target){
+  rightPage.innerHTML = pageHTML(target);
+  current = target;
+  rightPage.scrollTop = 0;
+  rightPage.querySelector('.page-inner')?.scrollTo(0,0);
   updateNav();
-  const next=pending ?? hashToId();
-  pending=null;
-  if(next!==current)requestAnimationFrame(()=>navigate(next));
-  setTimeout(()=>book.classList.remove('is-settling'),470);
 }
 function navigate(target){
-  if(!PAGE_IDS.includes(target))return;
-  if(turning){pending=target;return;}
-  if(target===current)return;
-  if(isReducedMotion()){finish(target);return;}
-  turning=true;
-  const old=current;
-  book.classList.remove('is-settling');book.classList.add('is-turning');
-  if(old==='cover'){
-    book.dataset.closed='false';
-    leftPage.innerHTML=insideMarkup();rightPage.innerHTML=rightMarkup(target);
-    hardCover.className='hard-cover turn-open';
-  }else if(target==='cover'){
-    hardCover.className='hard-cover is-open turn-close';
-  }else{
-    const backwards=nextIndex(target)<nextIndex(old);
-    sheetFront.innerHTML=rightMarkup(backwards?target:old);
-    sheetBack.innerHTML=leftMarkup(backwards?old:target);
-    rightPage.innerHTML=rightMarkup(target);
-    flipSheet.className=`flip-sheet ${backwards?'flipping-prev':'flipping-next'}`;
+  if(!PAGE_IDS.includes(target)) return;
+  if(turning){pending = target; return;}
+  if(target === current) return;
+  if(isReducedMotion()) { renderPage(target); return; }
+
+  turning = true;
+  const token = ++animationToken;
+  const forward = nextIndex(target) > nextIndex(current);
+  const leaf = document.createElement('div');
+  leaf.className = `turning-paper ${forward ? 'turning-forward' : 'turning-backward'}`;
+  leaf.setAttribute('aria-hidden','true');
+  book.classList.add('is-turning');
+
+  if (forward) {
+    // MOVE existing children rather than cloning. This preserves painted
+    // crayon canvases and avoids a duplicate sheet at the same z-depth.
+    while (rightPage.firstChild) leaf.appendChild(rightPage.firstChild);
+    rightPage.innerHTML = pageHTML(target);
+    rightPage.appendChild(leaf);
+  } else {
+    // The previous sheet unfolds on top of the existing page.
+    leaf.innerHTML = pageHTML(target);
+    rightPage.appendChild(leaf);
   }
-  setTimeout(()=>finish(target),PAGE_TIME+35);
+
+  // The actual page stays still. Only the temporary paper is transformed.
+  // A double RAF lets WebKit settle the initial painted layout first.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (token === animationToken) leaf.classList.add('turning-active');
+  }));
+
+  const done = () => {
+    if (token !== animationToken) return;
+    if (!forward) {
+      const fragment = document.createDocumentFragment();
+      while (leaf.firstChild) fragment.appendChild(leaf.firstChild);
+      leaf.remove();
+      rightPage.replaceChildren(fragment);
+    } else {
+      leaf.remove();
+    }
+    current = target;
+    rightPage.scrollTop = 0;
+    rightPage.querySelector('.page-inner')?.scrollTo(0,0);
+    updateNav();
+    book.classList.remove('is-turning');
+    turning = false;
+    const queued = pending ?? hashToId();
+    pending = null;
+    if (queued !== current) requestAnimationFrame(() => navigate(queued));
+  };
+
+  // WebViews may throttle transition events; use a bounded fallback.
+  const fallback = setTimeout(done, 570);
+  leaf.addEventListener('transitionend', event => {
+    if (event.target !== leaf || event.propertyName !== 'transform') return;
+    clearTimeout(fallback);
+    done();
+  }, {once: true});
 }
 function go(id){
-  if(!PAGE_IDS.includes(id))return;
-  const hash=`#/chapter/${id}`;
-  if(location.hash!==hash)location.hash=hash;
+  if(!PAGE_IDS.includes(id)) return;
+  const hash = `#/chapter/${id}`;
+  if(location.hash !== hash) location.hash = hash;
   else navigate(id);
 }
 function notify(text){
@@ -727,7 +749,7 @@ document.addEventListener('keydown',e=>{
       return;
     }
     if (e.target instanceof Element &&
-        e.target.closest('a, summary, input, textarea, select, [data-account-side], [data-gallery-move], #calendarBtn')) {
+        e.target.closest('a, button, summary, input, textarea, select')) {
       start = null;
       return;
     }
@@ -781,19 +803,8 @@ window.addEventListener('error',e=>{
   tile.innerHTML=`<div class="placeholder">${galleryCameraIcon}<span>이미지 확인 필요</span></div>`;
 },true);
 
-// 페이지 최초 렌더링
-$('coverFront').innerHTML=coverMarkup();
-$('coverInside').innerHTML=insideMarkup();
-current=hashToId();
-if(current!=='cover'){
-  hardCover.classList.add('is-open');
-  rightPage.innerHTML=rightMarkup(current);
-  leftPage.innerHTML=leftMarkup(current);
-}
-updateNav();
-
-
-
+// Render only the current (right-hand) page at startup.
+renderPage(hashToId());
 
 /* =====================================================
    Responsive Book Stage — Mobile first / Kakao in-app safe
@@ -825,13 +836,13 @@ updateNav();
     shell.style.setProperty('--mobile-visible-height', `${usableHeight}px`);
 
     const mobile = document.documentElement.clientWidth <= 760;
-    const designWidth = mobile ? LEAF_W : 2 * LEAF_W;
+    const designWidth = LEAF_W;
     const mainStyle = getComputedStyle(main);
     const availableWidth = Math.max(1, main.clientWidth - px(mainStyle.paddingLeft) - px(mainStyle.paddingRight));
     const availableHeight = Math.max(1, main.clientHeight - px(mainStyle.paddingTop) - px(mainStyle.paddingBottom));
 
     // Never grow the book beyond the viewport width on first render.
-    const scale = Math.min(mobile ? 1 : 1.15, availableWidth / designWidth);
+    const scale = Math.min(mobile ? 1 : 1.12, availableWidth / designWidth);
     const leafHeight = Math.min(950, Math.max(300, Math.floor((availableHeight - 2) / scale)));
 
     win.style.setProperty('--fit-scale', String(scale));

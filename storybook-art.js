@@ -5,20 +5,10 @@
    ================================================================ */
 (() => {
   'use strict';
-
   const COL = {
-    ink:   '#634b43',
-    rose:  '#c45e59',
-    pink:  '#e78a7e',
-    leaf:  '#628f62',
-    leaf2: '#8ca855',
-    blue:  '#6e90b8',
-    sky:   '#9fc6d8',
-    yellow:'#e2ac42',
-    cream: '#f0d29b',
-    earth: '#a47b58',
-    gray:  '#a59a8a',
-    dress: '#f3e9d9'
+    ink:'#79695e', rose:'#d59d9a', pink:'#eabbb2', leaf:'#98ae91',
+    leaf2:'#b8c6a4', blue:'#b3cad1', sky:'#dae7e5', yellow:'#e9c77e',
+    cream:'#f4e8cc', earth:'#b9a68c', gray:'#c7c0b3', dress:'#f4eee5'
   };
 
   function painter(canvas, seed) {
@@ -28,22 +18,20 @@
     const r = () => { state = (1664525 * state + 1013904223) >>> 0; return state / 4294967296; };
     const between = (a,b) => a + r() * (b-a);
     const W = 800, H = 580;
-    canvas.width = W * 2; canvas.height = H * 2;
-    ctx.setTransform(2,0,0,2,0,0);
+    canvas.width = W; canvas.height = H;
+    ctx.setTransform(1,0,0,1,0,0);
     ctx.lineCap='round'; ctx.lineJoin='round';
 
     // Wax pigment consists of short, uneven layered marks.
-    function stroke(points, color, width=3, strength=.95) {
-      for (let pass=0; pass<7; pass++) {
-        ctx.strokeStyle = color;
-        ctx.globalAlpha = strength * between(.16, .42)
+    function stroke(points, color, width=3, strength=.8) {
+      for (let pass=0; pass<5; pass++) {
         ctx.beginPath();
         points.forEach(([x,y],i) => {
           const px=x+between(-2,2), py=y+between(-2,2);
           if(!i)ctx.moveTo(px,py); else ctx.lineTo(px,py);
         });
-        ctx.strokeStyle=color; ctx.globalAlpha=strength * between(.14,.38);
-        ctx.lineWidth=width*between(.42,1.24); ctx.stroke();
+        ctx.strokeStyle=color; ctx.globalAlpha=strength * between(.09,.29);
+        ctx.lineWidth=width*between(.35,1.12); ctx.stroke();
       }
       ctx.globalAlpha=1;
       // Pale dry pencil-like speckles along the path.
@@ -52,7 +40,7 @@
         const n=Math.round(Math.hypot(x1-x0,y1-y0)/2.8);
         for(let j=0;j<n;j++) {
           const t=r(), x=x0+(x1-x0)*t+between(-3,3), y=y0+(y1-y0)*t+between(-3,3);
-          ctx.fillStyle=color;ctx.globalAlpha=strength*between(.07,.26);
+          ctx.fillStyle=color;ctx.globalAlpha=strength*between(.04,.22);
           ctx.fillRect(x,y,between(.7,2.5),between(.6,1.9));
         }
       }
@@ -70,21 +58,21 @@
         ctx.beginPath();ctx.moveTo(x,y);
         ctx.lineTo(x+between(3,14),y+between(-4,4));
         ctx.strokeStyle=color;ctx.lineWidth=between(.7,3.0);
-        ctx.globalAlpha=between(.09,.34);ctx.stroke();
+        ctx.globalAlpha=between(.06,.28);ctx.stroke();
       }
       ctx.restore();ctx.globalAlpha=1;
     }
     function oval(cx,cy,rx,ry,color,width=3,fill=.16) {
       const p=pathPoints(t=>[cx+Math.cos(t*Math.PI*2)*rx,cy+Math.sin(t*Math.PI*2)*ry],60);
       ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
-      ctx.fillStyle=color; ctx.globalAlpha=Math.min(fill + .07, .72); ctx.fill(); ctx.globalAlpha=1;
+      ctx.fillStyle=color; ctx.globalAlpha=fill; ctx.fill(); ctx.globalAlpha=1;
       pigment(color,[cx-rx,cy-ry,cx+rx,cy+ry],Math.max(9,Math.round(rx*ry/90)));
       stroke(p,color,width);
       return p;
     }
     function polygon(points,color,fill=.23) {
       ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();
-      ctx.fillStyle=color;ctx.globalAlpha=Math.min(fill + .06, .7);ctx.fill();ctx.globalAlpha=1;
+      ctx.fillStyle=color;ctx.globalAlpha=fill;ctx.fill();ctx.globalAlpha=1;
       const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
       pigment(color,[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)],150);
       stroke([...points,points[0]],color,4);
@@ -252,10 +240,10 @@
         butterfly(620,285,.9);
       }
       // Sparse pigment grains create irregular pastel wax on white paper.
-      for(let i=0;i<620;i++){
+      for(let i=0;i<450;i++){
         const x=between(18,782),y=between(12,568);
         const color=[COL.pink,COL.yellow,COL.blue,COL.leaf][Math.floor(r()*4)];
-        ctx.globalAlpha=between(.035,.14);ctx.fillStyle=color;
+        ctx.globalAlpha=between(.025,.10);ctx.fillStyle=color;
         ctx.fillRect(x,y,between(.4,2.4),between(.4,1.7));
       }
       ctx.globalAlpha=1;

@@ -1,0 +1,82 @@
+/* Dedicated guestbook chapter: original book / other pages remain intact. */
+.page-inner.page-guestbook .guestbook-body { min-width: 0; width: 100%; }
+.page-inner.page-guestbook .guestbook-mount { width: 100%; min-width: 0; }
+.page-inner.page-guestbook .guestbook-loading {
+  font-size: 14px; font-weight: 400; color: #6a5b52; text-align: center;
+}
+.guestbook-section {
+  width: 100%;
+  flex: 0 0 auto;
+  margin: 0 0 18px;
+  padding: 0 0 6px;
+  border-top: 0;
+  color: #453932;
+  text-align: left;
+  font-family: 'Gowun Batang', 'Noto Serif KR', serif;
+}
+.guestbook-heading { text-align: center; margin-bottom: 18px; }
+.guestbook-eyebrow {
+  display:block;
+  margin-bottom: 6px;
+  font: 500 19px/1.2 'Caveat', cursive;
+  color: #58755c;
+}
+.guestbook-heading h3 { margin: 0 0 7px; font-size: 23px; font-weight: 700; color: #40312d; }
+.guestbook-heading p { font-size: 14px; line-height: 1.6; color: #695b53; font-weight: 400; margin: 0; }
+.guestbook-form { width: 100%; display: flex; flex-direction: column; align-items: stretch; gap: 7px; }
+.guestbook-form label { font-size: 15px; font-weight: 700; color: #433730; margin: 5px 0 0; }
+.guestbook-form input:not([name="homepage"]),
+.guestbook-form textarea {
+  width:100%; min-width:0;
+  margin:0; padding:11px 12px;
+  border:1px solid #d8cbc0;
+  border-radius:9px;
+  background:#fffefb;
+  color:#352b27;
+  font: 500 16px/1.6 'Gowun Batang','Noto Serif KR',serif;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.guestbook-form textarea { min-height:110px; resize:vertical; }
+.guestbook-form input:focus-visible, .guestbook-form textarea:focus-visible {
+  outline:2px solid #9a7068; outline-offset:2px;
+}
+.guestbook-form input::placeholder, .guestbook-form textarea::placeholder { color:#897e73; font-weight:400; }
+.guestbook-honeypot { position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none; }
+.guestbook-submit {
+  min-height:44px;
+  margin-top:9px;
+  border:1px solid #b67f7b;
+  border-radius:12px;
+  color:#fff;
+  background:#b98480;
+  font:700 15px/1.45 'Gowun Batang','Noto Serif KR',serif;
+}
+.guestbook-submit:disabled { opacity:.55; }
+.guestbook-notice { margin:2px 0 0; font-size:12px; font-weight:400; line-height:1.65; color:#78695f; }
+.guestbook-form-status { margin:3px 0 0; min-height:18px; font-size:13px; font-weight:600; line-height:1.55; color:#6b4e43; }
+.guestbook-list-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:24px 0 11px; }
+.guestbook-list-heading h4 { margin:0; font-size:17px; font-weight:700; color:#46352f; }
+.guestbook-refresh {
+  flex:none; min-height:32px; padding:5px 8px;
+  font:500 12px/1.4 'Gowun Batang','Noto Serif KR',serif;
+  color:#73544c; background:#fffdfa; border:1px solid #e3d4cd; border-radius:99px;
+}
+.guestbook-list { list-style:none; display:flex; flex-direction:column; gap:10px; margin:0; padding:0; }
+.guestbook-entry, .guestbook-empty {
+  width:100%; min-width:0;
+  padding:13px 12px;
+  border:1px solid #ece2dc;
+  border-radius:10px;
+  background:rgba(255,252,247,.9);
+}
+.guestbook-empty { font-size:13px; font-weight:400; line-height:1.7; text-align:center; color:#75665c; }
+.guestbook-entry-head { display:flex; justify-content:space-between; align-items:baseline; gap:6px; margin:0 0 7px; }
+.guestbook-entry-name { min-width:0; overflow-wrap:anywhere; color:#48352f; font-size:15px; font-weight:700; }
+.guestbook-entry-date { flex:none; white-space:nowrap; color:#8a7e75; font-size:11px; font-weight:400; }
+.guestbook-entry-message { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; font-weight:500; line-height:1.85; color:#4d3e35; }
+@media (max-width:360px) {
+  .guestbook-section { margin-top:0; padding-top:0; }
+  .guestbook-heading h3 { font-size:21px; }
+  .guestbook-entry { padding:11px 10px; }
+}
