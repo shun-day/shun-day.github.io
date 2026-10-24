@@ -36,7 +36,7 @@
         </div>
 
         <button class="guestbook-submit" type="submit">메시지 남기기</button>
-        <p class="guestbook-notice">작성한 글은 확인 후 방명록에 공개됩니다. 개인정보는 입력하지 말아 주세요.</p>
+        <p class="guestbook-notice">작성한 글은 즉시 방명록에 공개됩니다. 개인정보는 입력하지 말아 주세요.</p>
         <p class="guestbook-form-status" role="status" aria-live="polite"></p>
       </form>
 
@@ -198,12 +198,19 @@
     status.textContent = '';
     try {
       // No .select(): unapproved submitted rows must not be publicly readable.
-      const { error } = await instance.from(TABLE).insert({ name, message });
+      
+      const { error } = await instance
+        .from(TABLE)
+        .insert({ name, message });
       if (error) throw error;
       if (form.isConnected) {
         form.reset();
-        status.textContent = '축하 메시지가 저장되었습니다! 확인 후 방명록에 공개됩니다.';
+        status.textContent =
+          '축하 메시지가 등록되었습니다!';
+        // 저장 직후 방명록 목록 갱신
+        await refresh(section);
       }
+
     } catch (err) {
       console.error('Guestbook insert error:', err);
       if (status.isConnected) status.textContent = '저장에 실패했습니다. 잠시 후 다시 시도해 주세요.';
