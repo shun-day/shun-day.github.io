@@ -1,0 +1,58 @@
+/* Background music button: centered between the existing top-left
+   '첫페이지로' and top-right '목차' buttons; visible on Cover too. */
+.book > .wedding-music-button {
+  position: absolute;
+  z-index: 80;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 99px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1.5px solid #ad7265;
+  border-radius: 999px;
+  background: #fffaf3;
+  color: #613b34;
+  font: 500 11px/1.2 'Gowun Batang', 'Noto Serif KR', serif;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px #55352d20;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.book > .wedding-music-button.is-playing {
+  background: #f9e9e4;
+  border-color: #b6807b;
+  color: #703e3c;
+}
+.book > .wedding-music-button:focus-visible {
+  outline: 2px solid #849c85;
+  outline-offset: 3px;
+}
+.book > .wedding-music-button:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+.book > .wedding-music-notice {
+  position: absolute;
+  z-index: 85;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 8px 11px;
+  border: 1px solid #ead9d2;
+  border-radius: 10px;
+  background: #fffaf3;
+  color: #613b34;
+  box-shadow: 0 2px 9px #55352d15;
+  font: 500 12px/1.45 'Gowun Batang', 'Noto Serif KR', serif;
+  text-align: center;
+  white-space: normal;
+  pointer-events: none;
+}
+.book > .wedding-music-notice[hidden] { display: none !important; }
