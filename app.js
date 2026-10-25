@@ -135,36 +135,21 @@ function dateDiff() {
 }
 
 function coverMarkup() {
-  return `<div class="cover-layout">
-    <div class="cover-eyebrow">a little book of us</div>
-    <div class="cover-ornament">
-      <div class="cover-prelude">Once upon a time...</div>
-      <h1 class="cover-title">Our Happily<br><em>Ever After</em></h1>
-      <p class="cover-subtitle">저희 두 사람의 첫 번째 동화</p>
-    </div>
-
-    <div class="cover-illustration">
-      <div class="cover-photo-frame">
-        <img
-          class="cover-hero-photo"
-          src="${enc(BOOK_IMAGES.cover)}"
-          alt="신랑 신부 웨딩 사진"
-          loading="eager"
-          decoding="async"
-        >
-        <canvas class="photo-corner"
-          data-crayon="sprig"
-          aria-hidden="true"></canvas>
+  return `<div class="cover-layout cover-arch-story cover-reference-arch">
+    <div class="cover-arch-stage">
+      <!-- Decorative pillars and crown extracted from the supplied reference image -->
+      <img class="cover-arch-art" src="reference-arch.webp" alt="" aria-hidden="true" loading="eager" decoding="async">
+      <!-- The original wedding photograph remains data-driven and is not baked into the arch -->
+      <img class="cover-arch-portrait" src="${enc(BOOK_IMAGES.cover)}" alt="신랑 신부 웨딩 사진" loading="eager" decoding="async">
+      <div class="cover-arch-words">
+        <p class="cover-fairyline">Once upon a time...</p>
+        <h1 class="cover-title">Our Happily <em>Ever After</em></h1>
+        <p class="cover-name">${enc(WEDDING.bride)} <span>&amp;</span> ${enc(WEDDING.groom)}</p>
+        <p class="cover-date">${enc(humanDate())}</p>
+        <p class="cover-venue">${enc(WEDDING.timeLabel)} · ${enc(WEDDING.venue)}</p>
       </div>
     </div>
-    
-    <div class="cover-bottom">
-      <p class="cover-name">${enc(WEDDING.bride)} <span>&</span> ${enc(WEDDING.groom)}</p>
-      <div class="cover-date">${enc(humanDate())}</div>
-      <div class="cover-venue">${enc(WEDDING.timeLabel)} · ${enc(WEDDING.venue)}</div>
-      <p class="cover-swipe-hint">← 왼쪽으로 밀어서 책을 펼쳐보세요</p>
-      
-    </div>
+    <p class="cover-swipe-hint">← 왼쪽으로 밀어서 책을 펼쳐보세요</p>
   </div>`;
 }
 

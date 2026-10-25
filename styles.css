@@ -85,8 +85,7 @@ h1,h2,h3,p { margin-top:0; }
   perspective-origin: 0% 50%;
   isolation: isolate;
   -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-
+  
 }
 .turning-paper {
   position: absolute;
@@ -1071,4 +1070,243 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 @media (max-width: 360px) {
   .page-inner .account-row span { font-size: 13px; }
   .page-inner .account-row button { font-size: 12px; padding-inline: 8px; }
+}
+
+
+/* ===== Golden arch cover : keep other chapters and page flip untouched ===== */
+.cover-gold-arch-layout {
+  justify-content: center;
+  gap: 0;
+  padding: 30px 21px 24px;
+}
+.cover-gold-arch-layout .cover-ornament {
+  flex: none;
+  margin: 0 0 12px;
+}
+.cover-gold-arch-layout .cover-title {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(38px, 5.2dvh, 55px);
+  font-weight: 600;
+  line-height: 0.97;
+  letter-spacing: -.043em;
+  color: #40332c;
+}
+.cover-gold-arch-layout .cover-title em {
+  display: block;
+  font-weight: 600;
+  color: #9e5550;
+}
+.cover-gold-arch-layout .cover-illustration {
+  flex: 0 1 auto;
+  width: 100%;
+  min-height: 210px;
+  height: clamp(250px, 43dvh, 405px);
+  max-height: 405px;
+  margin: 0 auto 9px;
+  overflow: visible;
+}
+.cover-gold-arch-layout .cover-photo-frame.cover-gold-arch-photo {
+  position: relative;
+  box-sizing: border-box;
+  width: auto;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: 1122 / 1402;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+.cover-gold-arch-layout .cover-hero-photo {
+  position: absolute;
+  z-index: 1;
+  top: 14%; left: 13%;
+  width: 74%; height: 79%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 45% 45% 1px 1px / 19% 19% 1px 1px;
+  box-shadow: none;
+  object-fit: cover;
+  object-position: center 32%;
+}
+.cover-gold-arch-layout .cover-gold-arch-overlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: fill;
+  pointer-events: none;
+}
+.cover-gold-arch-layout .cover-bottom {
+  flex: none;
+  gap: 5px;
+  margin: 0;
+}
+.cover-gold-arch-layout .cover-swipe-hint {
+  margin-top: 13px;
+}
+@media (max-height: 700px) {
+  .cover-gold-arch-layout { padding-block: 12px; }
+  .cover-gold-arch-layout .cover-ornament { margin-bottom: 6px; }
+  .cover-gold-arch-layout .cover-title { font-size: 40px; }
+  .cover-gold-arch-layout .cover-illustration { height: 42dvh; min-height: 180px; margin-bottom: 4px; }
+  .cover-gold-arch-layout .cover-swipe-hint { margin-top: 5px; }
+}
+
+
+/* === Cover: one antique arch surrounds the portrait and the invitation === */
+.cover-layout.cover-arch-story {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  padding: 12px 14px 17px;
+  gap: 0;
+  justify-content: center;
+}
+.cover-arch-story .cover-arch-stage {
+  position: relative;
+  width: min(100%, 365px);
+  height: min(100%, 685px);
+  min-height: 0;
+  flex: 1 1 auto;
+  margin: 0 auto;
+  isolation: isolate;
+}
+.cover-arch-story .cover-arch-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  z-index: 2;
+}
+.cover-arch-story .cover-arch-portrait {
+  position: absolute;
+  width: 47%;
+  height: 25%;
+  top: 30%;
+  left: 26.5%;
+  border-radius: 50%;
+  border: 2px solid rgba(183,133,83,.72);
+  box-shadow: 0 0 0 4px rgba(251,245,232,.86);
+  object-fit: cover;
+  object-position: center 32%;
+  z-index: 1;
+}
+.cover-arch-story .cover-arch-words {
+  position: absolute;
+  z-index: 3;
+  top: 59%;
+  left: 13%;
+  width: 74%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.cover-arch-story .cover-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(36px, 5.4dvh, 51px);
+  font-weight: 600;
+  line-height: .94;
+  letter-spacing: -.045em;
+  color: #44352e;
+  margin: 0 0 11px;
+  white-space: nowrap;
+}
+.cover-arch-story .cover-title em {
+  display: block;
+  font-weight: 600;
+  color: #a75e58;
+}
+.cover-arch-story .cover-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  margin: 0 0 7px;
+}
+.cover-arch-story .cover-date {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 600;
+}
+.cover-arch-story .cover-venue {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+.cover-arch-story .cover-swipe-hint {
+  flex: 0 0 auto;
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 400;
+}
+@media (max-height: 710px) {
+  .cover-layout.cover-arch-story { padding-top: 8px; padding-bottom: 8px; }
+  .cover-arch-story .cover-arch-words { top: 57%; }
+  .cover-arch-story .cover-title { font-size: 36px; margin-bottom: 5px; }
+  .cover-arch-story .cover-name { margin-bottom: 3px; font-size: 14px; }
+  .cover-arch-story .cover-date { font-size: 19px; }
+  .cover-arch-story .cover-swipe-hint { margin-top: 3px; font-size: 11px; }
+}
+
+/* Reference-image arch cover. Scoped to cover to preserve all other pages. */
+.cover-layout.cover-reference-arch {padding: 5px 4px 12px; background: #fffaf1; }
+.cover-reference-arch .cover-arch-stage { width: min(100%, 390px); height: min(100%, 750px); max-height: 100%; }
+.cover-reference-arch .cover-arch-art { z-index: 3; }
+
+.cover-reference-arch .cover-arch-portrait {
+  left: 22.5%;
+  top: 30%;
+  width: 55%;
+  height: 27.5%;
+
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 32%;
+
+  border: 2px solid #b78b5d;
+  box-shadow: 0 0 0 5px #fff8ef;
+  z-index: 1;
+}
+
+.cover-reference-arch .cover-arch-words {top: 59%; left: 21%; width: 58%; z-index: 4;}
+.cover-reference-arch .cover-fairyline {font-family: 'Caveat', cursive; font-size: 24px; line-height: 1.15; color: #a55c51; margin: 0 0 8px; white-space: nowrap;}
+.cover-reference-arch .cover-title {font-size: clamp(31px, 4.8dvh, 46px); white-space: nowrap; margin-bottom: 8px;}
+.cover-reference-arch .cover-title em {display: block;}
+.cover-reference-arch .cover-name {font-size: 15px; margin-bottom: 5px;}
+.cover-reference-arch .cover-date {font-size: 19px; margin-bottom: 3px;}
+.cover-reference-arch .cover-venue {font-size: 10px; white-space: normal; }
+@media(max-height:710px){
+ .cover-reference-arch .cover-arch-words{top: 57%;}
+ .cover-reference-arch .cover-title{font-size: 30px;}
+ .cover-reference-arch .cover-fairyline{font-size: 20px; margin-bottom: 3px;}
+}
+
+/* 아치 장식: 더 연하고 좌우로 넓게 */
+.cover-reference-arch .cover-arch-art {
+  position: absolute;
+
+  /* 기존보다 좌우로 12% 확대 */
+  left: -10%;
+  top: 0;
+  width: 120%;
+  height: 100%;
+  
+
+  /* 아치의 색을 부드럽게 */
+  opacity: 0.45;
+
+  object-fit: fill;
+  pointer-events: none;
+  z-index: 3;
 }
