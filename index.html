@@ -4,19 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#fffefa">
-  <meta name="description" content="새하얀 종이 위 크레파스 그림으로 펼쳐지는 우리의 결혼 이야기.">
+  <meta name="description" content="한 장씩 넘기는 아이보리와 버건디 웨딩 스토리북 모바일 청첩장.">
   <title>Our Happily Ever After | 모바일 청첩장</title>
-  <!-- Restore the exact font stylesheet loaded by the original invitation. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&amp;family=Cormorant+Garamond:wght@400;500;600;700&amp;family=Gowun+Batang:wght@400;700&amp;family=Noto+Serif+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=reference-arch-1">
+  <!-- Only the stylesheet cache key changed; existing scripts are untouched. -->
+  <link rel="stylesheet" href="styles.css?v=cover-consistent-v1">
   <link rel="stylesheet" href="guestbook.css?v=single-leaf-v1">
   <link rel="stylesheet" href="music-player.css?v=1">
   <script src="data.js" defer></script>
-  <script src="app.js?v=reference-arch-1" defer></script>
+  <script src="app.js?v=storybook-v2" defer></script>
   <script src="storybook-art.js?v=single-leaf-v1" defer></script>
-  <!-- Supabase loads only when the guestbook is opened. -->
   <script src="guestbook-config.js?v=2" defer></script>
   <script src="guestbook.js?v=single-leaf-v1" defer></script>
   <script src="music-player.js?v=1" defer></script>
@@ -29,12 +28,9 @@
           <div class="paper-page right-page" id="rightPage"></div>
         </div>
       </div>
-
     </main>
-
     <p class="page-status" id="pageStatus" aria-live="polite">표지</p>
   </div>
-
   <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="웨딩 사진 크게 보기">
     <div class="lightbox-bar"><span id="lightboxCounter">1 / 20</span><button type="button" class="lightbox-close" id="lightboxClose" aria-label="사진 닫기">✕ 닫기</button></div>
     <div class="lightbox-body"><button type="button" class="lightbox-arrow" id="lightboxPrev" aria-label="이전 사진">‹</button><img id="lightboxImage" alt=""><button type="button" class="lightbox-arrow" id="lightboxNext" aria-label="다음 사진">›</button></div>

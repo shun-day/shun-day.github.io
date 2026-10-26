@@ -49,14 +49,14 @@ const PHOTOS = [
 // 양가 각 3개(총 6개)의 계좌정보 자리. 원하는 구분 이름으로 바꿔도 됩니다.
 const ACCOUNTS = {
   bride: [
-    { label: '신부', bank: '', number: '', holder: '' },
-    { label: '신부 아버지', bank: '', number: '', holder: '' },
-    { label: '신부 어머니', bank: '', number: '', holder: '' }
+    { label: '신부', bank: '국민은행', number: '384902-0407-3478', holder: '박시연' },
+    { label: '신부 아버지 (박경정)', bank: '가가', number: '나', holder: '박경정' },
+    { label: '신부 어머니 (김소영)', bank: '라', number: '다', holder: '김소영' }
   ],
   groom: [
-    { label: '신랑', bank: '', number: '', holder: '' },
-    { label: '신랑 아버지', bank: '', number: '', holder: '' },
-    { label: '신랑 어머니', bank: '', number: '', holder: '' }
+    { label: '신랑', bank: '신', number: '랑', holder: '고대영' },
+    { label: '신랑 아버지', bank: '아', number: '버', holder: '지' },
+    { label: '신랑 어머니', bank: '어', number: '머', holder: '니' }
   ]
 };
 

@@ -85,7 +85,6 @@ h1,h2,h3,p { margin-top:0; }
   perspective-origin: 0% 50%;
   isolation: isolate;
   -webkit-backface-visibility: hidden;
-  
 }
 .turning-paper {
   position: absolute;
@@ -219,11 +218,26 @@ h1,h2,h3,p { margin-top:0; }
 .contents-flourish { font:24px 'Caveat',cursive; color:#c99b96; margin:5px 0 8px; }
 .contents-divider { font-size:10px; color:#9a948b; margin:0 0 9px; }
 .contents-buttons { width:100%; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; text-align:left; margin-top:6px; }
-.contents-photo-card { position:relative; width:min(100%, 228px); aspect-ratio:4/3; margin:3px auto 13px; padding:8px; background:#fffefb; border:1px solid #e8dfd6; border-radius:20px; box-shadow:0 8px 20px rgba(90,79,63,.10); }
-.contents-feature-photo { width:100%; height:100%; display:block; object-fit:cover; object-position:center 30%; border-radius:14px; border:4px solid #fff8f1; box-shadow:0 0 0 1px rgba(199,176,156,.45); }
-.contents-photo-doodle { position:absolute; pointer-events:none; }
-.contents-photo-doodle-top { width:90px; height:42px; top:-14px; left:-16px; transform:rotate(-7deg); }
-.contents-photo-doodle-bottom { width:110px; height:48px; right:-18px; bottom:-14px; transform:rotate(6deg); }
+/* Contents photo matches the simple printed-photo framing used on Story/Day. */
+.contents-photo-card {
+  position: relative;
+  width: min(100%, 228px);
+  aspect-ratio: 4 / 3;
+  margin: 4px auto 15px;
+  padding: 5px;
+  background: #fffefb;
+  border: 1px solid #e8e0d8;
+  border-radius: 0;
+  box-shadow: 0 5px 18px rgba(118, 109, 93, .12);
+  transform: rotate(-1.2deg);
+  flex: none;
+}
+.contents-feature-photo {
+  width: 100%; height: 100%; display: block;
+  object-fit: cover; object-position: center 30%;
+  border: 0; border-radius: 0;
+  background: #f4f0e9;
+}
 .contents-button { min-width:0; min-height:78px; padding:12px 13px; display:flex; align-items:center; justify-content:flex-start; gap:10px; border:1px solid #ebe1d8; border-radius:18px; background:linear-gradient(180deg,#fffefb,#f9f5ef); color:#57544e; text-align:left; font:700 12px 'Gowun Batang',serif; box-shadow:0 4px 12px rgba(101,91,75,.08); transition:transform .18s,box-shadow .18s,border-color .18s,color .18s; }
 .contents-button:hover { color:var(--pink); border-color:#d7b7ae; box-shadow:0 7px 14px rgba(101,91,75,.12); transform:translateY(-1px); }
 .contents-button:active { transform:translateY(1px); box-shadow:0 2px 7px rgba(101,91,75,.10); }
@@ -351,7 +365,7 @@ h1,h2,h3,p { margin-top:0; }
   .cover-title { font-size:42px; }
   .cover-subtitle { display:none; }
   .cover-hint { display:none; }
-  .cover-doodle, .contents-photo-doodle { display:none; }
+  .cover-doodle { display:none; }
   .contents-botanical { display:none; }
 }
 @media(prefers-reduced-motion:reduce) {
@@ -1072,241 +1086,213 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   .page-inner .account-row button { font-size: 12px; padding-inline: 8px; }
 }
 
-
-/* ===== Golden arch cover : keep other chapters and page flip untouched ===== */
-.cover-gold-arch-layout {
-  justify-content: center;
-  gap: 0;
-  padding: 30px 21px 24px;
-}
-.cover-gold-arch-layout .cover-ornament {
-  flex: none;
-  margin: 0 0 12px;
-}
-.cover-gold-arch-layout .cover-title {
-  margin: 0;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(38px, 5.2dvh, 55px);
-  font-weight: 600;
-  line-height: 0.97;
-  letter-spacing: -.043em;
-  color: #40332c;
-}
-.cover-gold-arch-layout .cover-title em {
-  display: block;
-  font-weight: 600;
-  color: #9e5550;
-}
-.cover-gold-arch-layout .cover-illustration {
-  flex: 0 1 auto;
-  width: 100%;
-  min-height: 210px;
-  height: clamp(250px, 43dvh, 405px);
-  max-height: 405px;
-  margin: 0 auto 9px;
-  overflow: visible;
-}
-.cover-gold-arch-layout .cover-photo-frame.cover-gold-arch-photo {
-  position: relative;
-  box-sizing: border-box;
-  width: auto;
-  height: 100%;
-  max-height: none;
-  aspect-ratio: 1122 / 1402;
-  margin: auto;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  overflow: visible;
-}
-.cover-gold-arch-layout .cover-hero-photo {
-  position: absolute;
-  z-index: 1;
-  top: 14%; left: 13%;
-  width: 74%; height: 79%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 45% 45% 1px 1px / 19% 19% 1px 1px;
-  box-shadow: none;
-  object-fit: cover;
-  object-position: center 32%;
-}
-.cover-gold-arch-layout .cover-gold-arch-overlay {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: fill;
-  pointer-events: none;
-}
-.cover-gold-arch-layout .cover-bottom {
-  flex: none;
-  gap: 5px;
-  margin: 0;
-}
-.cover-gold-arch-layout .cover-swipe-hint {
-  margin-top: 13px;
-}
-@media (max-height: 700px) {
-  .cover-gold-arch-layout { padding-block: 12px; }
-  .cover-gold-arch-layout .cover-ornament { margin-bottom: 6px; }
-  .cover-gold-arch-layout .cover-title { font-size: 40px; }
-  .cover-gold-arch-layout .cover-illustration { height: 42dvh; min-height: 180px; margin-bottom: 4px; }
-  .cover-gold-arch-layout .cover-swipe-hint { margin-top: 5px; }
+/* Editorial ivory wedding invitation cover — other pages unaffected */
+.cover-layout.cover-elegant { position:relative; width:100%; height:100%; margin:0; padding:0; display:block; overflow:hidden; background:#faf8f3; }
+.cover-elegant .elegant-sheet { position:relative; isolation:isolate; box-sizing:border-box; height:100%; width:100%; overflow:hidden; display:flex; flex-direction:column; align-items:center; text-align:center; padding:clamp(18px,3.9dvh,32px) 31px clamp(14px,2.9dvh,24px); background:radial-gradient(ellipse at 52% 42%,#fffefa 12%,#fbfaf7 62%,#f5f1ec 100%); color:#493b37; }
+.cover-elegant .elegant-sheet::before { content:''; position:absolute; inset:14px 15px; border:1px solid #e2d8d1; pointer-events:none; }
+.cover-elegant .elegant-line { position:absolute; top:27px; bottom:29px; width:1px; background:linear-gradient(to bottom,transparent,#d1bcb9 20%,#d1bcb9 80%,transparent); opacity:.6; }
+.cover-elegant .elegant-line-left {left:23px;} .cover-elegant .elegant-line-right {right:23px;}
+.cover-elegant .elegant-corner { position:absolute; z-index:1; font:italic 27px/1 Georgia,serif; color:#cbaeb1; opacity:.68; pointer-events:none; }
+.cover-elegant .corner-tl {top:17px;left:15px;transform:rotate(-35deg)} .cover-elegant .corner-tr {top:17px;right:15px;transform:scaleX(-1) rotate(-35deg)}
+.cover-elegant .corner-bl {bottom:17px;left:15px;transform:scaleY(-1) rotate(-35deg)} .cover-elegant .corner-br {bottom:17px;right:15px;transform:scale(-1) rotate(-35deg)}
+.cover-elegant .elegant-heading { z-index:1; flex:none; }
+.cover-elegant .elegant-kicker { font:500 clamp(17px,2.6dvh,24px)/1 'Caveat',cursive; color:#ad6f78; margin:0 0 7px; }
+.cover-elegant .elegant-title { font:italic 500 clamp(35px,5.1dvh,49px)/.93 'Cormorant Garamond',Georgia,serif; letter-spacing:-.045em; margin:0; color:#4c3034; white-space:nowrap; }
+.cover-elegant .elegant-title em {font-weight:500;}
+.cover-elegant .elegant-year {font:500 17px/1.1 'Cormorant Garamond',serif; margin:7px 0 2px;}
+.cover-elegant .elegant-tagline {font:500 8px/1.2 'Cormorant Garamond',serif; letter-spacing:.2em; color:#8d8480; margin:0;}
+.cover-elegant .elegant-photo-frame {position:relative; flex:1 1 auto; min-height:0; width:min(100%,273px); margin:clamp(12px,2.4dvh,22px) auto clamp(15px,3.1dvh,27px); padding:11px 11px 20px; background:#f5f3f0; box-shadow:0 1px 0 #e5e1dc,0 4px 17px #38291f13; display:flex; }
+.cover-elegant .elegant-photo {height:100%; width:100%; display:block; object-fit:cover; object-position:center 32%; background:#e2d8d0;}
+.cover-elegant .elegant-bow {position:absolute; z-index:3; left:50%; bottom:-63px; transform:translateX(-50%); width:min(335px, 108%); aspect-ratio:755/210; pointer-events:none; filter:drop-shadow(1px 4px 2px rgba(82,34,41,.2));}
+.cover-elegant .elegant-bow img {display:block; width:100%; height:100%; object-fit:contain;}
+.cover-elegant .elegant-details { flex:none; z-index:1; width:100%; padding:0 4px; }
+.cover-elegant .elegant-names {font:700 clamp(17px,2.45dvh,22px)/1.3 'Gowun Batang','Noto Serif KR',serif; letter-spacing:.07em; margin:6px 0 2px; }
+.cover-elegant .elegant-names span {font:italic 500 24px/1 'Cormorant Garamond',serif;color:#9f5360;margin:0 4px;}
+.cover-elegant .elegant-small-script {font:italic 500 16px/1 'Caveat',cursive; color:#9f8082; margin:3px 0 7px;}
+.cover-elegant .elegant-date {font:600 clamp(24px,3.8dvh,32px)/1 'Cormorant Garamond',serif; letter-spacing:.06em; margin:3px 0 2px;}
+.cover-elegant .elegant-time {font:400 12px/1.5 'Gowun Batang',serif; margin:0;}
+.cover-elegant .elegant-rule {width:70%; max-width:195px; margin:clamp(7px,1.6dvh,14px) auto; display:flex;align-items:center;gap:9px;color:#b68187;font-size:11px;}
+.cover-elegant .elegant-rule::before,.cover-elegant .elegant-rule::after {content:'';height:1px;background:#d8c7c5;flex:1;}
+.cover-elegant .elegant-venue {font:700 13px/1.5 'Gowun Batang',serif; margin:0;}
+.cover-elegant .elegant-hall {font:400 11px/1.6 'Gowun Batang',serif;color:#776967;margin:0;}
+.cover-elegant .elegant-footnote {flex:none; font:400 9px/1.5 'Gowun Batang',serif; color:#9a8b84; margin-top:auto; padding-top:12px; white-space:nowrap;}
+@media (max-height:710px) {
+ .cover-elegant .elegant-sheet{padding:17px 30px 12px;}
+ .cover-elegant .elegant-photo-frame{margin:8px auto 13px; padding:7px 7px 12px; width:min(100%,240px);}
+ .cover-elegant .elegant-bow{width:min(280px,108%);bottom:-51px;}
+ .cover-elegant .elegant-title{font-size:35px;}
+ .cover-elegant .elegant-small-script{margin:2px 0 3px;}
+ .cover-elegant .elegant-rule{margin:5px auto;}
+ .cover-elegant .elegant-footnote{font-size:8px;padding-top:6px;}
 }
 
-
-/* === Cover: one antique arch surrounds the portrait and the invitation === */
-.cover-layout.cover-arch-story {
-  box-sizing: border-box;
-  height: 100%;
-  min-height: 0;
-  padding: 12px 14px 17px;
-  gap: 0;
-  justify-content: center;
-}
-.cover-arch-story .cover-arch-stage {
-  position: relative;
-  width: min(100%, 365px);
-  height: min(100%, 685px);
-  min-height: 0;
-  flex: 1 1 auto;
-  margin: 0 auto;
-  isolation: isolate;
-}
-.cover-arch-story .cover-arch-art {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  pointer-events: none;
-  z-index: 2;
-}
-.cover-arch-story .cover-arch-portrait {
-  position: absolute;
-  width: 47%;
-  height: 25%;
-  top: 30%;
-  left: 26.5%;
-  border-radius: 50%;
-  border: 2px solid rgba(183,133,83,.72);
-  box-shadow: 0 0 0 4px rgba(251,245,232,.86);
-  object-fit: cover;
-  object-position: center 32%;
-  z-index: 1;
-}
-.cover-arch-story .cover-arch-words {
-  position: absolute;
-  z-index: 3;
-  top: 59%;
-  left: 13%;
-  width: 74%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-}
-.cover-arch-story .cover-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(36px, 5.4dvh, 51px);
-  font-weight: 600;
-  line-height: .94;
-  letter-spacing: -.045em;
-  color: #44352e;
-  margin: 0 0 11px;
-  white-space: nowrap;
-}
-.cover-arch-story .cover-title em {
-  display: block;
-  font-weight: 600;
-  color: #a75e58;
-}
-.cover-arch-story .cover-name {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: .07em;
-  margin: 0 0 7px;
-}
-.cover-arch-story .cover-date {
-  margin: 0 0 4px;
-  font-size: 22px;
-  font-weight: 600;
-}
-.cover-arch-story .cover-venue {
-  font-size: 11px;
+/* Short storybook captions: quiet supporting text, not page headlines. */
+.page-kicker,
+.contents-kicker {
+  font-family: 'Caveat', cursive;
   font-weight: 500;
-  line-height: 1.45;
-  white-space: nowrap;
+  letter-spacing: .035em;
+  color: #a47b77;
+  text-transform: none;
 }
-.cover-arch-story .cover-swipe-hint {
-  flex: 0 0 auto;
-  margin: 8px 0 0;
-  font-size: 12px;
-  font-weight: 400;
+.page-kicker { font-size: 15px; margin-bottom: 8px; }
+.contents-kicker { font-size: 15px; margin-bottom: 6px; }
+
+
+/* ===============================================================
+   COVER-CONSISTENT INTERIOR · 2026-10
+   APP.JS UNCHANGED. Six large, two-column touch menu tiles retained.
+   Append-only overrides intentionally win over historical rules.
+   =============================================================== */
+:root {
+  --inv-ivory:#fffefa;
+  --inv-wine:#793f4b;
+  --inv-wine-soft:#9f5360;
+  --inv-ink:#493b37;
+  --inv-muted:#776967;
+  --inv-line:#e2d8d1;
 }
-@media (max-height: 710px) {
-  .cover-layout.cover-arch-story { padding-top: 8px; padding-bottom: 8px; }
-  .cover-arch-story .cover-arch-words { top: 57%; }
-  .cover-arch-story .cover-title { font-size: 36px; margin-bottom: 5px; }
-  .cover-arch-story .cover-name { margin-bottom: 3px; font-size: 14px; }
-  .cover-arch-story .cover-date { font-size: 19px; }
-  .cover-arch-story .cover-swipe-hint { margin-top: 3px; font-size: 11px; }
+/* The actual cover visuals are deliberately not overridden. */
+.page-inner {
+  color:var(--inv-ink);
+  background:radial-gradient(ellipse at 52% 36%,#fffefa 20%,#fbfaf7 72%,#f8f5ef 100%);
 }
-
-/* Reference-image arch cover. Scoped to cover to preserve all other pages. */
-.cover-layout.cover-reference-arch {padding: 5px 4px 12px; background: #fffaf1; }
-.cover-reference-arch .cover-arch-stage { width: min(100%, 390px); height: min(100%, 750px); max-height: 100%; }
-.cover-reference-arch .cover-arch-art { z-index: 3; }
-
-.cover-reference-arch .cover-arch-portrait {
-  left: 22.5%;
-  top: 30%;
-  width: 55%;
-  height: 27.5%;
-
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center 32%;
-
-  border: 2px solid #b78b5d;
-  box-shadow: 0 0 0 5px #fff8ef;
-  z-index: 1;
+.page-inner .page-kicker,
+.page-inner .contents-kicker {
+  color:#a47b77;
+  font-family:'Caveat',cursive;
+  font-size:16px;
+  font-weight:500;
+  letter-spacing:.03em;
 }
-
-.cover-reference-arch .cover-arch-words {top: 59%; left: 21%; width: 58%; z-index: 4;}
-.cover-reference-arch .cover-fairyline {font-family: 'Caveat', cursive; font-size: 24px; line-height: 1.15; color: #a55c51; margin: 0 0 8px; white-space: nowrap;}
-.cover-reference-arch .cover-title {font-size: clamp(31px, 4.8dvh, 46px); white-space: nowrap; margin-bottom: 8px;}
-.cover-reference-arch .cover-title em {display: block;}
-.cover-reference-arch .cover-name {font-size: 15px; margin-bottom: 5px;}
-.cover-reference-arch .cover-date {font-size: 19px; margin-bottom: 3px;}
-.cover-reference-arch .cover-venue {font-size: 10px; white-space: normal; }
-@media(max-height:710px){
- .cover-reference-arch .cover-arch-words{top: 57%;}
- .cover-reference-arch .cover-title{font-size: 30px;}
- .cover-reference-arch .cover-fairyline{font-size: 20px; margin-bottom: 3px;}
+.page-inner .page-heading {
+  color:#4c3034;
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:clamp(44px,5.4dvh,51px);
+  font-weight:500;
+  letter-spacing:-.035em;
+  line-height:1;
 }
-
-/* 아치 장식: 더 연하고 좌우로 넓게 */
-.cover-reference-arch .cover-arch-art {
-  position: absolute;
-
-  /* 기존보다 좌우로 12% 확대 */
-  left: -10%;
-  top: 0;
-  width: 120%;
-  height: 100%;
-  
-
-  /* 아치의 색을 부드럽게 */
-  opacity: 0.45;
-
-  object-fit: fill;
-  pointer-events: none;
-  z-index: 3;
+.page-inner .page-subhead {
+  color:#8b5a61;
+  font-size:14px;
+  font-weight:500;
+}
+.page-inner .divider-ornament {color:#b68187;font-weight:400;opacity:.85;}
+.page-inner .main-copy {
+  color:#493b37;
+  font-size:15px;
+  font-weight:400;
+  line-height:2;
+}
+.page-inner .muted {color:#776967;font-weight:400;}
+/* Background crayon remains decorative, not the chapter's focal point. */
+.page-inner .right-page-art {opacity:.58;filter:saturate(.65);pointer-events:none;}
+.page-inner .right-page-drawing {opacity:.48;}
+.page-inner .crayon-divider, .page-inner .contents-botanical {opacity:.64;filter:saturate(.65);}
+/* Large, recognizable app buttons with printed-stationery styling. */
+.page-inner.page-contents .contents-layout {justify-content:flex-start;}
+.page-inner.page-contents .contents-kicker {margin-top:3px;}
+.page-inner.page-contents .contents-names {color:#493b37;font-weight:700;}
+.page-inner.page-contents .contents-names span {color:var(--inv-wine-soft);}
+.page-inner.page-contents .contents-date {color:#4c3034;}
+.page-inner.page-contents .contents-time {color:#7b4953;}
+.page-inner.page-contents .contents-location {color:var(--inv-muted);}
+.page-inner.page-contents .contents-flourish {color:#b68187;}
+.page-inner.page-contents .contents-divider {color:#796861;font-size:12px;font-weight:500;}
+.page-inner.page-contents .contents-buttons {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  width:100%;
+  margin-top:5px;
+}
+.page-inner.page-contents .contents-button {
+  min-width:0;
+  min-height:75px;
+  padding:10px 7px;
+  gap:5px;
+  background:linear-gradient(160deg,#fffefa,#fbf7f2);
+  border:1px solid #dfd1cf;
+  border-radius:13px;
+  box-shadow:0 3px 9px rgba(76,48,52,.065);
+  color:var(--inv-ink);
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:rgba(159,83,96,.12);
+}
+.page-inner.page-contents .contents-button:hover {
+  border-color:#bb9399;
+  background:#fffafa;
+  color:var(--inv-wine);
+  box-shadow:0 5px 12px rgba(76,48,52,.10);
+}
+.page-inner.page-contents .contents-button:focus-visible {outline:2px solid var(--inv-wine);outline-offset:2px;}
+.page-inner.page-contents .contents-button-icon {
+  flex:0 0 21px;width:21px;height:24px;
+  color:var(--inv-wine-soft);background:transparent;box-shadow:none;
+}
+.page-inner.page-contents .contents-button .ink-icon {width:21px;height:21px;}
+.page-inner.page-contents .contents-button-copy {flex:1 1 0;min-width:0;gap:3px;}
+.page-inner.page-contents .contents-button-copy strong {
+  color:#493b37;font-size:16px;font-weight:700;
+  line-height:1.3;letter-spacing:-.045em;
+  white-space:normal;word-break:keep-all;overflow-wrap:normal;
+}
+.page-inner.page-contents .contents-button-copy small {
+  color:#7f6c68;font-size:12px;font-weight:500;
+  line-height:1.35;white-space:normal;word-break:keep-all;
+}
+/* Keep header controls recognizable and easy to touch. */
+.page-top-nav .page-home-button,.page-top-nav .page-toc-button {
+  border:1px solid #d8bdc1;
+  background:#fffdfa;
+  color:#734650;
+  min-height:34px;
+  font-weight:600;
+  box-shadow:0 1px 5px #51343a15;
+}
+/* Functional screens: elegant typography without sacrificing legibility. */
+.page-inner .date-big {color:#4c3034;font-weight:600;}
+.page-inner .time-big {color:#905a63;font-weight:500;}
+.page-inner .info-box {border-color:var(--inv-line);}
+.page-inner .info-box h3 {color:#493b37;}
+.page-inner .info-box p {color:#776967;}
+.page-inner .page-action,.page-inner .venue-link.primary {
+  background:#955765;color:#fff;border-color:#955765;
+}
+.page-inner .venue-link:not(.primary),
+.page-inner .gallery-controls button,
+.page-inner .account-row button {
+  background:#fffdfa;color:#734650;border-color:#d9c5c5;
+}
+.page-inner .venue-eyebrow {color:#a47b77;font-weight:500;}
+.page-inner .venue-main-name {color:#4c3034;}
+.page-inner .venue-hall {color:#905a63;}
+.page-inner .venue-address {color:#675651;}
+.page-inner .venue-card {border-color:var(--inv-line);}
+.page-inner .venue-section-heading h3 {color:#493b37;}
+.page-inner .parking-badge {background:#f3e9e7;color:#734650;}
+.page-inner .venue-parking p {color:#493b37;}
+.page-inner .transit-line {border-color:var(--inv-line);}
+.page-inner .transit-station,.page-inner .transit-walk {color:#493b37;}
+.page-inner .venue-bus-details {border-color:var(--inv-line);}
+.page-inner .gallery-pager {color:#865d61;font-weight:500;}
+.page-inner .gallery-dots i.active {background:var(--inv-wine-soft);}
+.page-inner .account-group {border-color:var(--inv-line);background:#fffdfa;}
+.page-inner .account-group>summary {color:#493b37;}
+.page-inner .account-group>summary span {color:#865d61;}
+.page-inner .account-hint {color:#675651;font-weight:500;}
+.page-inner .account-row strong {color:#493b37;}
+.page-inner .account-row span {color:#574b47;}
+/* Small devices keep the same two-column, six-button information architecture. */
+@media (max-width:360px) {
+  .page-inner.page-contents .contents-buttons {gap:7px;}
+  .page-inner.page-contents .contents-button {min-height:68px;padding:8px 5px;gap:3px;}
+  .page-inner.page-contents .contents-button-icon {flex-basis:18px;width:18px;}
+  .page-inner.page-contents .contents-button .ink-icon {width:18px;height:18px;}
+  .page-inner.page-contents .contents-button-copy strong {font-size:14px;}
+  .page-inner.page-contents .contents-button-copy small {font-size:11px;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .page-inner.page-contents .contents-button {transition:none;}
 }

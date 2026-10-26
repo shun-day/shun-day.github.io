@@ -74,8 +74,18 @@ let lightboxIndex = -1;
 let lastLightboxFocus = null;
 let toastTimer = null;
 
+// One short storybook line per chapter. Keep the real information prominent.
+const CHAPTER_LINES = {
+  'Our Story': 'And then, there was us.',
+  'Wedding Day': 'A day to remember.',
+  'The Venue': 'Meet us here.',
+  'Our Memories': 'Little moments, forever.',
+  'Guestbook': 'Leave a little love.',
+  'With Love': 'Our forever begins.'
+};
+
 function chapterHeader(en, ko) {
-  return `<div class="page-kicker">a little chapter from our story</div>
+  return `<div class="page-kicker">${enc(CHAPTER_LINES[en] || 'Our little story')}</div>
     <h2 class="page-heading">${en}</h2>
     <p class="page-subhead">${ko}</p>
     <div class="divider-ornament" aria-hidden="true">~ ❀ ~</div>`;
@@ -135,21 +145,37 @@ function dateDiff() {
 }
 
 function coverMarkup() {
-  return `<div class="cover-layout cover-arch-story cover-reference-arch">
-    <div class="cover-arch-stage">
-      <!-- Decorative pillars and crown extracted from the supplied reference image -->
-      <img class="cover-arch-art" src="reference-arch.webp" alt="" aria-hidden="true" loading="eager" decoding="async">
-      <!-- The original wedding photograph remains data-driven and is not baked into the arch -->
-      <img class="cover-arch-portrait" src="${enc(BOOK_IMAGES.cover)}" alt="신랑 신부 웨딩 사진" loading="eager" decoding="async">
-      <div class="cover-arch-words">
-        <p class="cover-fairyline">Once upon a time...</p>
-        <h1 class="cover-title">Our Happily <em>Ever After</em></h1>
-        <p class="cover-name">${enc(WEDDING.bride)} <span>&amp;</span> ${enc(WEDDING.groom)}</p>
-        <p class="cover-date">${enc(humanDate())}</p>
-        <p class="cover-venue">${enc(WEDDING.timeLabel)} · ${enc(WEDDING.venue)}</p>
-      </div>
-    </div>
-    <p class="cover-swipe-hint">← 왼쪽으로 밀어서 책을 펼쳐보세요</p>
+  return `<div class="cover-layout cover-elegant">
+    <article class="elegant-sheet" aria-label="웨딩 청첩장 표지">
+      <div class="elegant-line elegant-line-left" aria-hidden="true"></div>
+      <div class="elegant-line elegant-line-right" aria-hidden="true"></div>
+      <div class="elegant-corner corner-tl" aria-hidden="true">❧</div>
+      <div class="elegant-corner corner-tr" aria-hidden="true">❧</div>
+      <div class="elegant-corner corner-bl" aria-hidden="true">❧</div>
+      <div class="elegant-corner corner-br" aria-hidden="true">❧</div>
+      <header class="elegant-heading">
+        <div class="elegant-kicker">Once upon a time...</div>
+        <h2 class="elegant-title"> A Wedding <em>storybook</em></h2>
+        <p class="elegant-year">${enc(WEDDING.date.slice(0,4))}</p>
+        <p class="elegant-tagline">OUR HAPPILY EVER AFTER</p>
+      </header>
+      <figure class="elegant-photo-frame">
+        <img src="${enc(BOOK_IMAGES.cover)}" class="elegant-photo" alt="신랑 신부 웨딩 사진" loading="eager" decoding="async">
+        <figcaption class="elegant-bow" aria-label="와인색 새틴 리본 장식">
+          <img src="wine-ribbon.webp" alt="" aria-hidden="true" decoding="async">
+        </figcaption>
+      </figure>
+      <section class="elegant-details">
+        <p class="elegant-names">${enc(WEDDING.bride)} <span>&amp;</span> ${enc(WEDDING.groom)}</p>
+        <p class="elegant-small-script">The beginning of our forever</p>
+        <p class="elegant-date">${enc(humanDate())}</p>
+        <p class="elegant-time">${enc(WEDDING.timeLabel)}</p>
+        <div class="elegant-rule" aria-hidden="true"><span>✦</span></div>
+        <p class="elegant-venue">${enc(WEDDING.venue)}</p>
+        <p class="elegant-hall">${enc(WEDDING.hall)}</p>
+      </section>
+      <div class="elegant-footnote">← 왼쪽으로 밀어 다음 장을 펼쳐보세요</div>
+    </article>
   </div>`;
 }
 
@@ -204,16 +230,14 @@ function inkIcon(name){
 function contentsMarkup() {
   const featurePhoto = BOOK_IMAGES.contents || BOOK_IMAGES.cover || '';
   return wrapPage(`<div class="contents-layout">
-    <div class="contents-kicker">the day we say, I do</div>
+    <div class="contents-kicker">Turn the page with us.</div>
     <div class="contents-names">${enc(WEDDING.bride)} <span>&</span> ${enc(WEDDING.groom)}</div>
     <div class="contents-date">${enc(humanDate())}</div>
     <div class="contents-time">${enc(WEDDING.timeLabel)}</div>
     <div class="contents-location">${enc(WEDDING.venue)} <span>·</span> ${enc(WEDDING.hall)}</div>
     <div class="contents-flourish" aria-hidden="true">~ ❀ ~</div>
     ${featurePhoto ? `<div class="contents-photo-card">
-      <canvas class="contents-photo-doodle contents-photo-doodle-top" data-crayon="sprig" aria-hidden="true"></canvas>
       <img class="contents-feature-photo" src="${enc(featurePhoto)}" alt="${enc(`${WEDDING.bride}와 ${WEDDING.groom}의 웨딩 사진`)}" loading="eager" decoding="async">
-      <canvas class="contents-photo-doodle contents-photo-doodle-bottom" data-crayon="botanical" aria-hidden="true"></canvas>
     </div>` : ''}
     <p class="contents-divider">원하시는 메뉴를 버튼처럼 바로 눌러보세요</p>
     <nav class="contents-buttons" aria-label="예식 안내 목차">
