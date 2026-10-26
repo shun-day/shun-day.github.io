@@ -1296,3 +1296,57 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 @media (prefers-reduced-motion:reduce) {
   .page-inner.page-contents .contents-button {transition:none;}
 }
+
+/* ==============================================================
+   MOBILE READABILITY · STRONG TYPE
+   Keep the existing cover layout and 2-column app menu intact.
+   Gowun Batang is loaded at 400 / 700; use its real 700 weight
+   for small Korean copy rather than a simulated 500 / 600.
+   ============================================================== */
+.page-inner .main-copy,
+.page-inner .page-subhead,
+.page-inner .muted,
+.page-inner .contents-divider,
+.page-inner.page-contents .contents-button-copy small,
+.page-inner .contents-time,
+.page-inner .contents-location,
+.page-inner .account-hint,
+.page-inner .account-row span,
+.page-inner .venue-address,
+.page-inner .venue-hall,
+.page-inner .venue-parking p,
+.page-inner .venue-section-heading h3,
+.page-inner .transit-line,
+.page-inner .transit-station,
+.page-inner .transit-walk,
+.page-inner .bus-group-title,
+.page-inner .bus-group p,
+.page-inner .info-box p,
+.page-inner .page-action,
+.page-inner .venue-link,
+.page-inner .gallery-controls button,
+.page-inner .account-row button,
+.page-top-nav .page-home-button,
+.page-top-nav .page-toc-button {
+  font-weight:700;
+}
+.page-inner.page-contents .contents-button-copy strong,
+.page-inner .contents-names,
+.page-inner .venue-main-name,
+.page-inner .info-box h3,
+.page-inner .account-group > summary,
+.page-inner .account-row strong {font-weight:700;}
+/* English serif titles remain vintage, but are no longer hairline-light. */
+.page-inner .page-heading,
+.page-inner .date-big,
+.page-inner .contents-date {font-weight:700;}
+.page-inner .page-kicker,
+.page-inner .contents-kicker,
+.page-inner .venue-eyebrow,
+.page-inner .gallery-pager {font-weight:700;}
+/* Cover composition unchanged: make only its small informational copy legible. */
+.cover-elegant .elegant-time,
+.cover-elegant .elegant-hall,
+.cover-elegant .elegant-footnote {font-weight:700;}
+.cover-elegant .elegant-tagline,
+.cover-elegant .elegant-year {font-weight:700;}
