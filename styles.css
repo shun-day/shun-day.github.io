@@ -120,9 +120,35 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .messages-list {list-style:none;padding:0;margin:0}.message-entry {padding:19px 0;border-bottom:1px solid #e6dfd6;display:flex;align-items:flex-start;gap:12px;scroll-margin-top:90px}.message-entry.is-highlighted {background:#f3e7e4}.message-avatar {width:52px;height:61px;flex:0 0 52px;background:#f3ebe4;display:grid;place-items:center}.message-avatar .pixel-avatar {width:42px;height:56px}.message-copy {flex:1;min-width:0}.message-name {display:flex;align-items:center;gap:7px;flex-wrap:wrap}.message-name strong {font:700 13px var(--korean)}.message-name span {font:600 10px var(--sans);color:#ad8c85}.message-time {display:block;margin:4px 0 8px;font:600 10px var(--sans);color:#9a9086}.message-copy p {white-space:pre-wrap;overflow-wrap:anywhere;font:700 12px/1.9 var(--korean);color:#635a51;margin:0}.empty-message {padding:27px 0;text-align:center;font:700 12px/2 var(--korean);color:#90857b}
 .visually-hidden {position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important}
 
+/* 계좌 안내 오른쪽 + / − 기호 */
+.account-accordion > summary > span {
+  display: block;
+  margin-left: auto;
+  flex: 0 0 auto;
+  font: 600 20px/1 var(--serif);
+  color: var(--accent);
+}
+
+/* 닫혀 있을 때 */
+.account-accordion > summary > span::before {
+  content: "+";
+}
+
+/* 펼쳤을 때 */
+.account-accordion[open] > summary > span::before {
+  content: "−";
+}
+
+/* 기존에 추가했던 가상 기호 제거 */
+.account-accordion > summary::after {
+  content: none;
+}
+
 /* Gratitude / accounts */
 .love-section {background:#f0eae4;text-align:center}.love-photo {max-width:385px;margin:0 auto 31px;padding:10px 10px 25px;background:#fffefa;box-shadow:0 7px 22px #3b342b16}.love-photo img {width:100%;aspect-ratio:4/3.7;object-fit:cover}.account-section>p {font:700 12px/2 var(--korean);color:#6d6158;margin:0 0 21px}
-.account-accordion {border-top:1px solid #d3c6bb;text-align:left}.account-accordion:last-child {border-bottom:1px solid #d3c6bb}.account-accordion>summary {min-height:58px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;list-style:none;font:700 14px var(--korean)}.account-accordion>summary::-webkit-details-marker {display:none}.account-accordion>summary span {font:600 20px var(--serif);color:var(--accent)}.account-entry {display:flex;align-items:center;justify-content:space-between;gap:9px;padding:16px 5px;border-top:1px solid #ded2c6;text-align:left}.account-entry strong {display:block;font:700 12px var(--korean)}.account-entry p {font:700 11px/1.9 var(--korean);margin:6px 0 0;color:#786d65;overflow-wrap:anywhere}.account-entry button {flex:0 0 auto;min-height:38px;background:transparent;border:1px solid #b9a89b;padding:8px 9px;color:#695b53;font:700 10px var(--korean)}
+.account-accordion {border-top:1px solid #d3c6bb;text-align:left}.account-accordion:last-child {border-bottom:1px solid #d3c6bb}.account-accordion>summary {min-height:58px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;list-style:none;font:700 14px var(--korean)}.account-accordion>summary::-webkit-details-marker {display:none}
+
+.account-entry {display:flex;align-items:center;justify-content:space-between;gap:9px;padding:16px 5px;border-top:1px solid #ded2c6;text-align:left}.account-entry strong {display:block;font:700 12px var(--korean)}.account-entry p {font:700 11px/1.9 var(--korean);margin:6px 0 0;color:#786d65;overflow-wrap:anywhere}.account-entry button {flex:0 0 auto;min-height:38px;background:transparent;border:1px solid #b9a89b;padding:8px 9px;color:#695b53;font:700 10px var(--korean)}
 .share-button {margin-top:39px}.site-footer {text-align:center;padding:68px 20px 45px;background:#302a29;color:#f5ede7}.site-footer p {font:italic 500 31px/1.1 var(--serif);margin:0 0 21px}.site-footer>span {display:block;font:500 32px var(--serif);letter-spacing:.14em}.site-footer>a {display:inline-block;border-bottom:1px solid #b99c98;margin-top:29px;padding-bottom:7px;font:600 10px var(--sans);letter-spacing:.12em;color:#c9b2ac}
 
 /* Modal photograph, notification */
@@ -1318,17 +1344,24 @@ html {scroll-padding-top:calc(78px + env(safe-area-inset-top,0px))}
 .music-toggle:focus-visible {outline:2px solid var(--accent);outline-offset:2px}
 
 
-/* ================================================================
-   v17 · Touch polish, shorter portrait, compact character selector
-   ================================================================ */
-/* Proximity: gently aligns sections when users stop NEAR a section start.
-   Unlike mandatory snapping it permits long sections to scroll naturally. */
-html {scroll-snap-type:y proximity;overscroll-behavior-y:auto}
-main > section {scroll-snap-align:start;scroll-snap-stop:always;scroll-margin-top:65px}
-@media (prefers-reduced-motion:reduce){html {scroll-snap-type:none}}
 
-/* A horizontal spread is EXACTLY one viewport: stop on EVERY spread. */
-.gallery-rail {scroll-snap-type:x mandatory;scroll-padding:0;overscroll-behavior-x:contain}
+/* 전체 페이지는 자연스럽게 세로 스크롤 */
+html {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+  scroll-padding-top: 70px;
+}
+
+main > section {
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
+}
+
+/* 사진첩만 가로로 한 묶음씩 이동 */
+.gallery-rail {
+  scroll-snap-type: x mandatory;
+}
+
 .gallery-slide-track {gap:0}
 .gallery-slide {flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always}
 

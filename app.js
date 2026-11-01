@@ -420,7 +420,8 @@
   [['bride','신부측'],['groom','신랑측']].forEach(([side,label])=>{
     const list=Array.isArray(accountData[side])?accountData[side]:[];
     const details=document.createElement('details');details.className='account-accordion';
-    const summary=document.createElement('summary');summary.innerHTML=`${label} 계좌 안내 <span aria-hidden="true">＋</span>`;details.append(summary);
+    const summary=document.createElement('summary');summary.innerHTML=`${label} 계좌 안내 <span aria-hidden="true"></span>`;details.append(summary);
+    
     list.forEach(account=>{
       const item=document.createElement('div');item.className='account-entry';
       const text=document.createElement('div');const strong=document.createElement('strong');strong.textContent=account.label;
