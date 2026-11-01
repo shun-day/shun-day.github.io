@@ -130,9 +130,9 @@
   }));
 
   /* Content from existing data.js, no hardcoded couple/venue. */
-  setText('envelopeNames', `${W.bride} & ${W.groom}`);
+  setText('envelopeNames', `${W.groom} & ${W.bride}`);
   setText('envelopeDate', fullDate());
-  setText('envelopePrintedNames', `${W.bride}  &  ${W.groom}`);
+  setText('envelopePrintedNames', `${W.groom}  &  ${W.bride}`);
   setText('envelopePrintedDate', fullDate());
   $('heroNames').innerHTML = `${escapeHTML(W.bride)} <span>&amp;</span> ${escapeHTML(W.groom)}`;
   setText('heroLocation', `${W.venue} · ${W.hall}`);
