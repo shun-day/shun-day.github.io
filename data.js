@@ -20,8 +20,6 @@ const WEDDING = {
   contactBride: '010-9533-3988'
 };
 
-// 20개 사진 자리. 빈 문자열('')을 실제 사진 경로로 바꾸세요.
-// 예: { src: 'images/photo01.jpg', alt: '햇살 아래 함께 웃는 신랑 신부' }
 const IMAGE_BASE = './images/MYBOX/';
 const PHOTOS = [
   { src: `${IMAGE_BASE}HSY_2860.JPG`, alt: '웨딩 사진 01' },

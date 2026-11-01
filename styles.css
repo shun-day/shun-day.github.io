@@ -49,19 +49,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 
 /* Hero */
 .hero {padding-top:54px;padding-bottom:65px;text-align:center}.hero-kicker {font:600 10px var(--sans);letter-spacing:.2em;color:var(--accent);margin-bottom:11px}
-
-.hero-names {
-  font: 500 clamp(37px, 9vw, 53px)/1.3 var(--korean);
-  letter-spacing: .02em;
-  margin: 0 0 28px;
-}
-
-.hero-names span {
-  font: 400 .65em/1 var(--korean);
-  color: var(--accent);
-  vertical-align: middle;
-  margin: 0 10px;
-}
+.hero-names {font:400 clamp(37px,9vw,53px)/1.3 var(--korean);letter-spacing:.02em;margin:0 0 28px}.hero-names span {font:italic 400 1.3em var(--serif);color:var(--accent);vertical-align:middle;margin:0 8px}
 .hero-photo-wrap {position:relative;margin:0 auto;max-width:440px;padding:13px 13px 23px;background:#fffdf9;border:1px solid #ded7ce;box-shadow:0 12px 33px #3c342b17}
 .hero-photo-wrap img {height:auto;width:100%;aspect-ratio:3/3.8;object-fit:cover;object-position:center 30%;background:#ece6de}
 .hero-photo-label {position:absolute;left:-15px;top:27px;writing-mode:vertical-rl;transform:rotate(180deg);z-index:3;font:600 9px var(--sans);letter-spacing:.18em;color:var(--accent)}
@@ -1330,49 +1318,553 @@ html {scroll-padding-top:calc(78px + env(safe-area-inset-top,0px))}
 .music-toggle:focus-visible {outline:2px solid var(--accent);outline-offset:2px}
 
 
-/* 원판사진 무대 높이 추가 축소 */
+/* ================================================================
+   v17 · Touch polish, shorter portrait, compact character selector
+   ================================================================ */
+/* Proximity: gently aligns sections when users stop NEAR a section start.
+   Unlike mandatory snapping it permits long sections to scroll naturally. */
+html {scroll-snap-type:y proximity;overscroll-behavior-y:auto}
+main > section {scroll-snap-align:start;scroll-snap-stop:always;scroll-margin-top:65px}
+@media (prefers-reduced-motion:reduce){html {scroll-snap-type:none}}
+
+/* A horizontal spread is EXACTLY one viewport: stop on EVERY spread. */
+.gallery-rail {scroll-snap-type:x mandatory;scroll-padding:0;overscroll-behavior-x:contain}
+.gallery-slide-track {gap:0}
+.gallery-slide {flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always}
+
+
+/* Two one-line scrollers, labelled ONCE per category, not per avatar. */
+.character-picker {display:flex;flex-direction:column;gap:13px;min-width:0}
+.character-picker-hint {font:500 11px/1.6 var(--korean);color:#8c7c73;margin:2px 0 13px}
+.character-row {display:grid;gap:6px;min-width:0}
+.character-row-label {font:700 12px/1.5 var(--korean);color:#775e5a}
+.character-track {
+  display:flex;gap:8px;width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;
+  padding:3px 2px 11px;scroll-snap-type:x proximity;
+  overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:#d1c0b7 transparent;
+  touch-action:pan-x pan-y;
+}
+.character-track::-webkit-scrollbar {height:3px}
+.character-track::-webkit-scrollbar-thumb {background:#d1c0b7;border-radius:8px}
+.character-option,.character-option.is-selected {
+  position:relative;flex:0 0 78px;width:78px;min-width:78px;
+  height:100px;min-height:100px;padding:8px 5px;
+  border:1px solid #e5d9d0;background:#fffefa;
+  display:grid;place-items:center;scroll-snap-align:start;
+}
+.character-option.is-selected {border:2px solid var(--accent);background:#f6eded;padding:7px 4px}
+.character-option .pixel-avatar {width:63px;height:84px;max-width:none;object-fit:contain}
+.character-option span {display:none}
+@media(max-width:374px){
+  .character-option,.character-option.is-selected {flex-basis:72px;width:72px;min-width:72px;height:93px;min-height:93px}
+  .character-option .pixel-avatar {width:56px;height:76px}
+}
+
+/* Portrait participants keep their names and form a closer, intimate group. */
 .portrait-stage {
-  height: 340px;
-  min-height: 340px;
-  padding: 0;
-  background-size: auto 100%;
-  background-position: center bottom;
+  width:max(100%,var(--stage-width,370px));min-width:0;
+  height:340px;min-height:340px;padding:0;
+  background-size:auto 100%;background-position:center bottom;
 }
-
-/* 캐릭터 하단 위치 조정 */
 .portrait-party {
-  bottom: 35px;
+  bottom:34px;width:var(--portrait-width,368px);
+  grid-template-columns:repeat(var(--portrait-columns),60px) 128px repeat(var(--portrait-columns),60px);
+}
+.portrait-guest-side {grid-template-columns:repeat(var(--portrait-columns),60px);grid-template-rows:116px 92px;min-height:208px}
+.portrait-avatar,.portrait-avatar:hover {width:60px;min-height:0;padding:0}
+.portrait-avatar .pixel-avatar {width:56px;height:76px}
+.portrait-avatar.is-upper .portrait-avatar-name {bottom:72px}
+.portrait-avatar.is-lower .portrait-avatar-name {bottom:-8px}
+.portrait-couple {min-width:128px;width:128px;min-height:208px}
+.portrait-couple-figures {width:128px;height:171px;overflow:visible}
+.portrait-couple-figures img,.portrait-couple-figures img:nth-child(2) {width:75px;flex:0 0 75px;height:145px}
+.portrait-couple-figures img:nth-child(2) {margin-left:-25px}
+.portrait-topline {top:10px}
+.portrait-bottomline {bottom:8px}
+@media(max-width:374px){
+  .portrait-stage {height:320px;min-height:320px}
+  .portrait-party {bottom:32px;grid-template-columns:repeat(var(--portrait-columns),60px) 128px repeat(var(--portrait-columns),60px)}
+  .portrait-guest-side {grid-template-columns:repeat(var(--portrait-columns),60px);grid-template-rows:116px 92px}
+  .portrait-couple {width:128px;min-width:128px}
+  .portrait-couple-figures {width:128px;height:171px}
+}
+@media(min-width:620px){
+  .portrait-stage {height:380px;min-height:380px}
+  .portrait-party {bottom:40px}
 }
 
-/* 장식 문구 */
-.portrait-topline {
-  top: 10px;
+
+/* v18 · Compact two-row character selector, consistent thumb artboards */
+.guest-form-wrap .selection-fieldset {margin:0 0 17px;padding:0;border:0;min-width:0}
+.guest-form-wrap .selection-fieldset legend {margin:0;padding:0 0 4px}
+.guest-form-wrap .character-picker-hint {margin:2px 0 9px;font:500 11px/1.5 var(--korean)}
+.guest-form-wrap .character-picker {display:flex;flex-direction:column;gap:8px}
+.guest-form-wrap .character-row {gap:3px}
+.guest-form-wrap .character-row-label {font:700 12px/1.25 var(--korean)}
+.guest-form-wrap .character-track {gap:7px;padding:1px 1px 6px}
+.guest-form-wrap .character-option,
+.guest-form-wrap .character-option.is-selected {
+  flex:0 0 72px;width:72px;min-width:72px;height:83px;min-height:83px;
+  overflow:hidden;padding:2px;border:1px solid #e6dbd2;
+  display:flex;align-items:center;justify-content:center;background:#fffefa;
+}
+.guest-form-wrap .character-option.is-selected {border:2px solid var(--accent);padding:1px;background:#f6eded}
+.guest-form-wrap .character-option .pixel-avatar {
+  width:66px;height:79px;max-width:100%;object-fit:contain;object-position:center;flex:none;
+}
+.guest-form-wrap .character-option span {display:none}
+.guest-form-wrap .field-label {margin-bottom:9px}
+.guest-form-wrap #guestName {margin-bottom:19px}
+@media(max-width:374px) {
+  .guest-form-wrap .character-option,
+  .guest-form-wrap .character-option.is-selected {flex-basis:68px;width:68px;min-width:68px;height:79px;min-height:79px}
+  .guest-form-wrap .character-option .pixel-avatar {width:62px;height:75px}
 }
 
-.portrait-bottomline {
-  bottom: 8px;
+/* v19: 표지 이름은 볼드체 없이 Noto Serif KR Regular(400) */
+.hero-names {font-weight:400}
+.hero-names .name-separator {font-weight:400}
+
+/* v20: direct link to Google Calendar, without intermediate choices */
+#calendarAddButton {cursor:pointer}
+#calendarAddButton[aria-disabled="true"] {opacity:.55;cursor:not-allowed}
+
+
+/* =====================================================
+   v21: compact invitation, three-tier guest portrait,
+   inline date countdown, correct music state glyphs.
+   ===================================================== */
+/* Shorten the vertical document without squeezing touch targets. */
+.content-section {padding-top:54px;padding-bottom:53px}
+.section-intro {padding-top:27px;padding-bottom:17px}
+.section-korean {margin-top:10px}
+.eyebrow {margin-bottom:9px}
+.hero {padding-top:34px;padding-bottom:42px}
+.hero-names {margin-bottom:17px}
+.hero-bottom {margin-top:17px}
+.quick-links-section {padding-top:30px;padding-bottom:38px}
+.quick-links-section .section-intro {padding-top:20px;padding-bottom:16px}
+.quick-links-section .quick-link {min-height:82px}
+.day-section.content-section {padding-top:50px;padding-bottom:50px}
+.day-section .section-intro {padding-top:25px;padding-bottom:16px}
+.day-card {padding-top:23px;padding-bottom:19px}
+.day-large {margin-bottom:4px}
+.day-readable {display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0 7px;font:600 11px/1.9 var(--korean);margin:7px auto 0;word-break:keep-all}
+.day-readable .countdown {display:inline-block;white-space:nowrap;font:600 11px/1.8 var(--serif);letter-spacing:.025em;color:var(--accent);margin:0 2px;padding:0;border:0}
+.day-readable #dayDateWeekday {white-space:nowrap}
+.day-when {margin:3px 0 14px;font-size:13px}
+.calendar-grid {padding-block:10px 12px}
+.day-info {padding-top:13px}
+.day-section .line-button {margin-top:16px}
+.gallery-section .section-intro {padding-bottom:13px}
+.gallery-page-meta {margin-bottom:11px}
+.gallery-swipe-hint {margin-top:13px;margin-bottom:0}
+.story-photo {margin-bottom:18px}
+.signature {margin-top:20px}
+.love-photo {margin-bottom:20px}
+.share-button {margin-top:22px}
+.heart-card {margin-bottom:10px}
+.heart-card > div {padding-block:13px}
+.like-status {margin-bottom:14px}
+.portrait-box {margin-top:10px;margin-bottom:21px}
+.portrait-header {padding-bottom:9px}
+.portrait-controls {padding-top:9px}
+.portrait-note {padding-top:4px}
+.guest-form-head {margin-bottom:15px}
+.messages-section {margin-top:24px}
+.site-footer {padding-top:23px;padding-bottom:calc(23px + env(safe-area-inset-bottom))}
+
+/* Three close horizontal tiers, 55px columns, with the bottom level filled first. */
+.portrait-stage {height:340px;min-height:340px}
+.portrait-party {
+  bottom:32px;
+  width:var(--portrait-width,348px);
+  grid-template-columns:repeat(var(--portrait-columns),55px) 128px repeat(var(--portrait-columns),55px);
+}
+.portrait-guest-side {
+  grid-template-columns:repeat(var(--portrait-columns),55px);
+  grid-template-rows:57px 58px 76px;
+  min-height:191px;
+}
+.portrait-couple {width:128px;min-width:128px;min-height:191px}
+.portrait-couple-figures {width:128px;height:162px}
+.portrait-couple-figures img,
+.portrait-couple-figures img:nth-child(2) {height:139px}
+.portrait-avatar,.portrait-avatar:hover {width:55px;min-width:55px;min-height:0}
+.portrait-avatar .pixel-avatar {width:49px;height:66px;bottom:1px}
+.portrait-avatar.is-upper .portrait-avatar-name,
+.portrait-avatar.is-middle .portrait-avatar-name {bottom:68px;max-width:55px}
+.portrait-avatar.is-lower .portrait-avatar-name {bottom:-8px;max-width:55px}
+.portrait-header {font:700 11px/1.6 var(--korean);letter-spacing:0}
+.portrait-header span:last-child {font:700 11px/1.6 var(--korean)}
+
+/* Button icon represents the CURRENT playback state: ON=waves, OFF=mute. */
+.music-toggle.is-playing .sound-arc {display:block}
+.music-toggle.is-playing .sound-slash {display:none}
+.music-toggle:not(.is-playing) .sound-arc {display:none}
+.music-toggle:not(.is-playing) .sound-slash {display:block}
+
+@media(max-width:374px) {
+  .portrait-stage {height:320px;min-height:320px}
+  .portrait-party {bottom:30px;grid-template-columns:repeat(var(--portrait-columns),55px) 128px repeat(var(--portrait-columns),55px)}
+  .portrait-guest-side {grid-template-columns:repeat(var(--portrait-columns),55px);grid-template-rows:57px 58px 76px}
+  .portrait-couple {width:128px;min-width:128px;min-height:191px}
+  .day-readable {font-size:10px;gap:0 5px}
+}
+@media(min-width:620px) {
+  .portrait-stage {height:380px;min-height:380px}
+  .portrait-party {bottom:39px}
 }
 
-/* 작은 모바일 */
+
+/* ===================================================================
+   v22: tighter editorial layout, stair-aligned 3-tier group portrait.
+   =================================================================== */
+/* D-day > date > weekday and time, with no repeated date string. */
+.day-card .day-countdown {
+  display:block;margin:0 auto 4px;padding:0;
+  font:500 16px/1.4 var(--serif);letter-spacing:.12em;
+  color:var(--accent);
+}
+.day-card .day-large {margin:0 0 3px;gap:10px}
+.day-card .day-when {
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  margin:0 0 16px;color:#7b5058;font:700 13px/1.6 var(--korean);
+}
+.day-card .day-when span {color:inherit}
+.day-card .day-when b {font:inherit}
+
+/* Remove excessive empty space while retaining useful reading breaks. */
+.content-section {padding-top:40px;padding-bottom:40px}
+.guestbook-section.content-section {padding-top:39px;padding-bottom:36px}
+.day-section.content-section {padding-top:37px;padding-bottom:38px}
+.gallery-section.content-section {padding-top:38px;padding-bottom:34px}
+.venue-section.content-section {padding-top:40px;padding-bottom:40px}
+.love-section.content-section {padding-top:39px;padding-bottom:36px}
+.story.content-section {padding-top:40px;padding-bottom:42px}
+.section-intro {padding-top:19px;padding-bottom:14px}
+.section-topline {padding-bottom:9px}
+.quick-links-section {padding-top:26px;padding-bottom:31px}
+.quick-links-section .section-intro {padding-top:15px;padding-bottom:12px}
+.guest-form-wrap {margin-top:15px;padding:17px clamp(14px,4vw,24px) 12px}
+.guest-form-head {margin-bottom:10px}
+.guest-form-head p {margin-bottom:9px}
+.guest-form-wrap .selection-fieldset {margin-bottom:12px}
+.guest-form-wrap .character-picker-hint {margin-top:0;margin-bottom:7px}
+.guest-form-wrap #guestName {margin-bottom:14px}
+.guest-form-wrap .text-field {margin-bottom:13px}
+.guest-form-wrap .message-field {min-height:98px;margin-bottom:12px}
+.guest-form-wrap .form-notice {margin:8px 0 2px}
+.guest-form-wrap .form-status:empty {min-height:0;line-height:0}
+.messages-section {margin-top:17px}
+.messages-heading {padding-bottom:5px}
+.message-entry {padding:9px 0;gap:10px}
+.message-avatar {width:44px;height:54px;flex:0 0 44px}
+.message-avatar .pixel-avatar {width:37px;height:49px}
+.message-time {margin:1px 0 3px}
+.message-copy p {line-height:1.7}
+.empty-message {padding:17px 0}
+.portrait-box {margin-bottom:14px}
+/* Three rows share equal vertical intervals; align near the ceremony risers.
+   Keep bottom row near the third step and names attached to each sprite. */
+.portrait-party {bottom:33px}
+.portrait-guest-side {
+  grid-template-rows:repeat(3,56px);
+  min-height:168px;
+}
+.portrait-couple {min-height:168px}
+.portrait-avatar .pixel-avatar {height:62px;bottom:0}
+.portrait-avatar.is-upper .portrait-avatar-name,
+.portrait-avatar.is-middle .portrait-avatar-name {bottom:64px}
+.portrait-avatar.is-lower .portrait-avatar-name {bottom:-9px}
+@media(max-width:374px) {
+  .portrait-party {bottom:30px}
+  .portrait-guest-side {grid-template-rows:repeat(3,56px);min-height:168px}
+  .portrait-couple {min-height:168px}
+  .day-card .day-when {font-size:12px}
+}
+@media(min-width:620px) {
+  .portrait-party {bottom:41px}
+}
+
+
+/* =============================================================
+   v23 - all guest labels immediately BELOW feet, one date font.
+   The 80px tier includes sprite + foot label without overlapping
+   the next row of guests.
+   ============================================================= */
+.portrait-guest-side {
+  grid-template-rows: repeat(3, 80px);
+  min-height: 240px;
+  align-items: stretch;
+}
+.portrait-avatar,
+.portrait-avatar:hover {
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+.portrait-avatar .pixel-avatar {
+  height: 62px;
+  width: 49px;
+  bottom: 14px;
+  object-fit: contain;
+  object-position: center bottom;
+}
+.portrait-avatar-name,
+.portrait-avatar.is-upper .portrait-avatar-name,
+.portrait-avatar.is-middle .portrait-avatar-name,
+.portrait-avatar.is-lower .portrait-avatar-name {
+  bottom: 3px;
+  max-width: 55px;
+  font: 700 9px/1.1 var(--korean);
+  padding: 1px 2px;
+  white-space: nowrap;
+}
+@media(max-width:374px) {
+  .portrait-guest-side {grid-template-rows:repeat(3, 80px);min-height:240px}
+  .portrait-avatar .pixel-avatar {height:62px;bottom:14px}
+  .portrait-avatar-name,
+  .portrait-avatar.is-upper .portrait-avatar-name,
+  .portrait-avatar.is-middle .portrait-avatar-name,
+  .portrait-avatar.is-lower .portrait-avatar-name {bottom:3px}
+}
+
+/* D-day, large date, weekday and time all use Noto Serif KR.
+   Remove excessive font-metric and margin gaps between first two lines. */
+.day-card .day-countdown {
+  font-family:var(--korean);
+  font-style:normal;
+  font-size:16px;
+  font-weight:500;
+  line-height:1.2;
+  letter-spacing:0;
+  margin:0 0 1px;
+}
+.day-card .day-large {
+  gap:8px;
+  margin:0 0 3px;
+  align-items:baseline;
+}
+.day-card .day-number-block strong {
+  font-family:var(--korean);
+  font-style:normal;
+  font-weight:500;
+  font-size:clamp(43px,11vw,54px);
+  line-height:1.1;
+  letter-spacing:-.055em;
+}
+.day-card .day-number-block small {
+  font-family:var(--korean);
+  font-style:normal;
+  font-size:12px;
+  font-weight:500;
+  line-height:1.2;
+}
+.day-card .day-date-divider {
+  font-family:var(--korean);
+  font-style:normal;
+  font-size:30px;
+  font-weight:400;
+  line-height:1;
+}
+.day-card .day-when,
+.day-card .day-when span,
+.day-card .day-when b {
+  font-family:var(--korean);
+  font-style:normal;
+  font-weight:500;
+  font-size:13px;
+  line-height:1.4;
+  letter-spacing:-.025em;
+}
+.day-card .day-when {margin:0 0 13px;gap:12px}
+@media(max-width:374px) {
+  .day-card .day-number-block strong {font-size:43px}
+  .day-card .day-when,
+  .day-card .day-when span,
+  .day-card .day-when b {font-size:12px}
+}
+
+
+/* 원판사진 무대 */
+.portrait-stage {
+  width: max(100%, var(--stage-width, 390px));
+  min-width: 0;
+}
+
+/* 하객 전체 영역 */
+.portrait-party {
+  --guest-cell: 64px;
+
+  display: block;
+  position: absolute;
+  left: 50%;
+  bottom: 32px;
+
+  width: var(--portrait-width, 384px);
+  height: 216px;
+  min-height: 216px;
+
+  margin: 0;
+  padding: 0;
+  transform: translateX(-50%);
+  overflow: visible;
+}
+
+/* 중앙에 빈 공간이 없는 단일 그리드 */
+.portrait-party > .portrait-guests {
+  position: relative;
+  z-index: 2;
+
+  display: grid;
+  grid-template-columns:
+    repeat(var(--guest-columns, 6), var(--guest-cell));
+  grid-template-rows: repeat(3, 72px);
+
+  width: 100%;
+  height: 216px;
+  gap: 0;
+}
+
+/* 하객 하나의 영역 */
+.portrait-guests > .portrait-avatar,
+.portrait-guests > .portrait-avatar:hover {
+  display: block;
+  position: relative;
+
+  width: var(--guest-cell);
+  height: 72px;
+  min-width: 0;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+  transform: none;
+  overflow: visible;
+  background: transparent;
+}
+
+/* 미니미 */
+.portrait-guests .pixel-avatar {
+  position: absolute;
+
+  left: 50%;
+  bottom: 14px;
+
+  width: 53px;
+  height: 56px;
+
+  object-fit: contain;
+  object-position: center bottom;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* 발 바로 아래 이름표 */
+.portrait-guests > .portrait-avatar
+.portrait-avatar-name {
+  position: absolute;
+  z-index: 2;
+
+  left: 50%;
+  bottom: 1px;
+
+  width: max-content;
+  max-width: 60px;
+  margin: 0;
+  padding: 1px 2px;
+
+  transform: translateX(-50%);
+
+  font: 700 9px/1.15 var(--korean);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* 신랑·신부는 맨 앞에 겹쳐 배치 */
+.portrait-party > .portrait-couple {
+  position: absolute;
+  z-index: 5;
+
+  left: 50%;
+  bottom: -16px;
+
+  width: 128px;
+  min-width: 128px;
+  height: 165px;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.portrait-party > .portrait-couple
+.portrait-couple-figures {
+  width: 128px;
+  height: 165px;
+}
+
+.portrait-party > .portrait-couple
+.portrait-couple-figures img {
+  height: 140px;
+}
+
 @media (max-width: 374px) {
-  .portrait-stage {
-    height: 320px;
-    min-height: 320px;
-  }
-
   .portrait-party {
-    bottom: 32px;
+    bottom: 30px;
   }
 }
 
-/* 태블릿 이상 */
-@media (min-width: 620px) {
-  .portrait-stage {
-    height: 380px;
-    min-height: 380px;
-  }
+/* 신랑·신부를 하객보다 아래로 배치 */
+.portrait-party > .portrait-couple {
+  position: absolute;
+  left: 50%;
+  bottom: -16px;
 
-  .portrait-party {
-    bottom: 40px;
-  }
+  /* 중앙 정렬 유지 + 아래로 12px 이동 */
+  transform: translate(-50%, 25px);
+
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* 하객 가로 간격 축소 */
+.portrait-party {
+  --guest-cell: 50px;
+}
+
+/* 모든 하객을 일정한 간격으로 배치 */
+.portrait-party > .portrait-guests {
+  grid-template-columns:
+    repeat(var(--guest-columns, 6), var(--guest-cell));
+  column-gap: 0;
+}
+
+/* 캐릭터 선택 영역 */
+.portrait-guests > .portrait-avatar {
+  width: 50px;
+  min-width: 50px;
+}
+
+/* 미니미 크기 유지 */
+.portrait-guests .pixel-avatar {
+  width: 48px;
+  height: 56px;
+}
+
+/* 이름표도 간격에 맞게 조정 */
+.portrait-guests > .portrait-avatar
+.portrait-avatar-name {
+  max-width: 48px;
+}
+
+/* 신랑 신부는 중앙 앞줄에서 조금 아래로 */
+.portrait-party > .portrait-couple {
+  transform: translate(-50%, 23px);
 }

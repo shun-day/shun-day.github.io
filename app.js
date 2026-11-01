@@ -1,9 +1,4 @@
-/*
- * Editorial wedding invitation · GitHub Pages / vanilla JavaScript
- * 기존 data.js (WEDDING, PHOTOS, BOOK_IMAGES, ACCOUNTS) 및
- * guestbook-config.js (WEDDING_GUESTBOOK_CONFIG)를 재사용합니다.
- * 기존 book/page-fit/guestbook.js/storybook-art.js 는 불러오지 않습니다.
- */
+
 (() => {
   'use strict';
 
@@ -105,8 +100,8 @@
     const playing=!music.paused&&!music.ended;
     musicToggle.classList.toggle('is-playing',playing);
     musicToggle.setAttribute('aria-pressed',String(playing));
-    musicToggle.setAttribute('aria-label',playing?'배경음악 음소거':'배경음악 재생');
-    musicToggle.title=playing?'배경음악 음소거':'배경음악 재생';
+    musicToggle.setAttribute('aria-label',playing?'배경음악 켜짐, 눌러 끄기':'배경음악 꺼짐, 눌러 재생');
+    musicToggle.title=playing?'배경음악 켜짐 · 눌러 끄기':'배경음악 꺼짐 · 눌러 재생';
   }
   function attemptOpeningMusic(showError=false) {
     musicDesired=true;
@@ -159,12 +154,21 @@
   setText('envelopeDate', fullDate());
   setText('envelopePrintedNames', `${W.groom}  ·  ${W.bride}`);
   setText('envelopePrintedDate', fullDate());
-  $('heroNames').innerHTML = `${escapeHTML(W.bride)} <span class="name-separator" aria-hidden="true">·</span> ${escapeHTML(W.groom)}`;
+  
+  const heroNames = $('heroNames');
+
+  if (heroNames) {
+    heroNames.innerHTML = `
+      ${escapeHTML(W.bride)}
+      <span class="name-separator" aria-hidden="true">·</span>
+      ${escapeHTML(W.groom)}
+    `;
+  }
+
   setText('heroLocation', `${W.venue} · ${W.hall}`);
   setText('heroDate', `${fullDate()} ${weekdays[new Date(dateParts[0],dateParts[1]-1,dateParts[2]).getDay()]}`);
   setText('invitationText', W.greeting);
   $('storySignature').innerHTML = `${escapeHTML(W.bride)} <span class="name-separator" aria-hidden="true">·</span> ${escapeHTML(W.groom)}`;
-  setText('footerNames', `${W.groom} · ${W.bride}`);
 
   function assignPhoto(id, candidates) {
     const img = $(id);
@@ -182,14 +186,14 @@
   assignPhoto('storyPhoto',[pics.chapter?.story,pics.inside,pics.cover]);
   assignPhoto('lovePhoto',[pics.chapter?.love,pics.inside,pics.cover]);
 
-  /* Date, calendar and .ics download. */
+  /* Date and calendar options: Google event template + Naver manual entry. */
   const koWeekdays = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   const koreanWeekday = koWeekdays[new Date(dateParts[0],dateParts[1]-1,dateParts[2]).getDay()];
-  setText('dayMonth', `${dateParts[0]}년 ${dateParts[1]}월`);
-  setText('dayMonthNumber', pad(dateParts[1]));
-  setText('dayNumber', pad(dateParts[2]));
+  setText('dayMonthNumber', string(dateParts[1]));
+  setText('dayNumber', string(dateParts[2]));
   setText('dayWeekday', koreanWeekday);
-  setText('dayReadable', `${dateParts[0]}년 ${dateParts[1]}월 ${dateParts[2]}일 ${koreanWeekday}`);
+  setText('dayDateWeekday', koreanWeekday);
+  $('dayLarge').setAttribute('aria-label',`${dateParts[0]}년 ${dateParts[1]}월 ${dateParts[2]}일 결혼식 날짜`);
   const [hour,minute] = String(W.time || '17:00').split(':').map(Number);
   setText('dayTime', `${hour>=12?'오후':'오전'} ${hour%12 || 12}:${pad(minute)}`);
   setText('dayVenue', W.venue);setText('dayHall',W.hall);
@@ -202,26 +206,34 @@
   function updateCountdown() {
     const target = new Date(`${W.date}T${W.time}:00+09:00`).getTime();
     const days = Math.ceil((target-Date.now())/86400000);
-    setText('countdown', Number.isFinite(days) ? days > 0 ? `OUR DAY · D–${days}` : days === 0 ? 'TODAY IS OUR DAY ♡' : 'THANK YOU FOR CELEBRATING WITH US' : '');
+    setText('countdown', Number.isFinite(days) ? (days > 0 ? `D-${days}` : days === 0 ? 'D-DAY' : `D+${Math.abs(days)}`) : '');
   }
   updateCountdown();
-  $('calendarAddButton').addEventListener('click', () => {
-    const start = new Date(`${W.date}T${W.time}:00+09:00`);
-    if (Number.isNaN(start.getTime())) { toast('예식 날짜를 확인해 주세요.');return; }
-    const dt = d => d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
-    const escapeICS = s => String(s).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
-    const ics = [
-      'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Wedding Invitation//KR',
-      'BEGIN:VEVENT',`UID:wedding-${W.date}@shun-day.github.io`,
-      `DTSTAMP:${dt(new Date())}`,`DTSTART:${dt(start)}`,`DTEND:${dt(new Date(start.getTime()+3600000))}`,
-      `SUMMARY:${escapeICS(`${W.groom} & ${W.bride} 결혼식`)}`,
-      `LOCATION:${escapeICS(`${W.venue} ${W.hall} ${W.address}`)}`,
-      'END:VEVENT','END:VCALENDAR'
-    ].join('\r\n');
-    const url = URL.createObjectURL(new Blob([ics],{type:'text/calendar;charset=utf-8'}));
-    const a=document.createElement('a');a.href=url;a.download='wedding.ics';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
-    toast('일정 파일을 저장했습니다. 달력 앱에서 열어주세요.');
-  });
+
+  const calendarStart = new Date(`${W.date}T${pad(hour)}:${pad(minute)}:00+09:00`);
+  const calendarEnd = new Date(calendarStart.getTime()+60*60*1000);
+  const calendarTime = d => d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
+  const eventTitle = `${W.bride} · ${W.groom} 결혼식`;
+  const eventLocation = [W.venue,W.hall,W.address].filter(Boolean).join(' ');
+  const calendarLink = $('calendarAddButton');
+  if (!Number.isNaN(calendarStart.getTime())) {
+    const googleParams = new URLSearchParams({
+      action:'TEMPLATE',
+      text:eventTitle,
+      dates:`${calendarTime(calendarStart)}/${calendarTime(calendarEnd)}`,
+      ctz:'Asia/Seoul',
+      details:'결혼식에 초대합니다.',
+      location:eventLocation
+    });
+    calendarLink.href=`https://calendar.google.com/calendar/render?${googleParams.toString()}`;
+  } else {
+    calendarLink.removeAttribute('href');
+    calendarLink.setAttribute('aria-disabled','true');
+    calendarLink.addEventListener('click', event=>{
+      event.preventDefault();
+      toast('예식 날짜를 확인해 주세요.');
+    });
+  }
 
   /* A gallery that includes the photos already specified in PHOTOS and BOOK_IMAGES. */
   const gallery = [];
@@ -303,7 +315,7 @@
     const left=galleryRail.scrollLeft;
     let closest=0,minimum=Infinity;
     gallerySlides.forEach((slide,index)=>{
-      const distance=Math.abs(slide.offsetLeft-left);
+      const distance=Math.abs(slide.offsetLeft-gallerySlides[0].offsetLeft-left);
       if(distance<minimum){minimum=distance;closest=index;}
     });
     return closest;
@@ -321,8 +333,29 @@
     const direction=event.key==='ArrowRight'?1:-1;
     const next=Math.max(0,Math.min(gallerySlides.length-1,activeGallerySlide()+direction));
     const target=gallerySlides[next];
-    if(target) galleryRail.scrollTo({left:target.offsetLeft,behavior:reducedMotion?'instant':'smooth'});
+    if(target) galleryRail.scrollTo({left:target.offsetLeft-gallerySlides[0].offsetLeft,behavior:reducedMotion?'instant':'smooth'});
   });
+  // Snap to ONE editorial spread at a time on touch devices. Do not hijack
+  // vertical swipes; only intervene once horizontal intent is clear.
+  let galleryTouchStart=null;
+  galleryRail.addEventListener('touchstart',event=>{
+    if(event.touches.length!==1) return;
+    const t=event.touches[0];
+    galleryTouchStart={x:t.clientX,y:t.clientY,index:activeGallerySlide()};
+  },{passive:true});
+  galleryRail.addEventListener('touchend',event=>{
+    if(!galleryTouchStart||!event.changedTouches.length) return;
+    const t=event.changedTouches[0];
+    const dx=t.clientX-galleryTouchStart.x,dy=t.clientY-galleryTouchStart.y;
+    const old=galleryTouchStart;galleryTouchStart=null;
+    if(Math.abs(dx)<32||Math.abs(dx)<=Math.abs(dy)*1.15) return;
+    const index=Math.max(0,Math.min(gallerySlides.length-1,old.index+(dx<0?1:-1)));
+    const first=gallerySlides[0],slide=gallerySlides[index];
+    if(!first||!slide) return;
+    // Momentum may continue for a moment; align once it settles.
+    setTimeout(()=>galleryRail.scrollTo({left:slide.offsetLeft-first.offsetLeft,behavior:'smooth'}),70);
+    updateGalleryProgress(index);
+  },{passive:true});
   renderGallerySlides();
   function openLightbox(index) {
     if(!gallery.length) return;
@@ -399,42 +432,42 @@
     });
     accWrap.append(details);
   });
-  $('shareButton').addEventListener('click',async()=>{
-    const url=`${location.origin}${location.pathname}`;
-    if(navigator.share) {
-      try {await navigator.share({title:`${W.groom} & ${W.bride} 결혼식`,text:'저희 두 사람의 소중한 시작에 초대합니다.',url});return;}
-      catch(e) {if(e.name==='AbortError') return;}
-    }
-    await copyText(url,'청첩장 주소를 복사했습니다.');
-  });
 
-  /* Fresh characters use a consistent transparent WebP sprite collection.
-   * Save a new v3 marker in the existing message column. Old v2 messages still display.
-   * No new guestbook database columns or room/furniture data are needed.
-   */
-  // Numeric IDs are stable because historic Supabase messages store them.
-  // Removed choices (IDs 2–5) are mapped to clothed alternatives for display.
   const avatars = [
     {name:'여성 1',image:'assets/guest-02-v15.webp'},
     {name:'여성 2',image:'assets/guest-03-v15.webp'},
-    {name:'여성 3',image:'assets/guest-06-v15.webp'},
-    {name:'여성 4',image:'assets/guest-07-v15.webp'},
-    {name:'여성 5',image:'assets/guest-12-v15.webp'},
-    {name:'여성 6',image:'assets/guest-13-v15.webp'},
     {name:'남성 1',image:'assets/guest-04-v15.webp'},
     {name:'남성 2',image:'assets/guest-05-v15.webp'},
+    {name:'여성 3',image:'assets/guest-06-v15.webp'},
+    {name:'여성 4',image:'assets/guest-07-v15.webp'},
     {name:'남성 3',image:'assets/guest-08-v15.webp'},
     {name:'남성 4',image:'assets/guest-09-v15.webp'},
     {name:'남성 5',image:'assets/guest-10-v15.webp'},
     {name:'남성 6',image:'assets/guest-11-v15.webp'},
+    {name:'여성 5',image:'assets/guest-12-v15.webp'},
+    {name:'여성 6',image:'assets/guest-13-v15.webp'}
   ];
   const selectableAvatarIds = Array.from({length:avatars.length},(_,i)=>i);
+
   function avatarImage(index) {
-    const avatar = avatars[Number.isInteger(index) && index>=0 && index<avatars.length ? index : 0];
-    const img=document.createElement('img');img.src=avatar.image;img.alt='';
-    img.loading='lazy';img.decoding='async';img.className='pixel-avatar';
+    const avatar = avatars[
+      Number.isInteger(index) &&
+      index >= 0 &&
+      index < avatars.length ? index : 0
+    ];
+
+    const img = document.createElement('img');
+
+    // 선택창, 원판사진, 메시지 목록 모두 동일한 이미지 사용
+    img.src = avatar.image;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.className = 'pixel-avatar';
+
     return img;
   }
+
   let avatarChoice=0;
   const avPick=$('characterPicker');
   function refreshPickers() {
@@ -444,16 +477,27 @@
       button.setAttribute('aria-pressed',String(selected));
     });
   }
-  selectableAvatarIds.forEach(index=>{
-    const avatar=avatars[index];
-    const button=document.createElement('button');button.type='button';button.className='character-option';
-    button.dataset.avatarId=String(index);
-    button.setAttribute('aria-label',`${avatar.name} 캐릭터 선택`);
-    button.append(avatarImage(index));
-    const name=document.createElement('span');name.textContent=avatar.name;button.append(name);
-    button.addEventListener('click',()=>{avatarChoice=index;refreshPickers();});
-    avPick.append(button);
-  });
+  function addCharacterRow(label, ids) {
+    const row=document.createElement('div');row.className='character-row';
+    const heading=document.createElement('span');heading.className='character-row-label';
+    heading.textContent=label;
+    const track=document.createElement('div');track.className='character-track';
+    track.setAttribute('role','group');
+    track.setAttribute('aria-label',`${label} 캐릭터 선택`);
+    track.tabIndex=0;
+    ids.forEach(index=>{
+      const avatar=avatars[index];
+      const button=document.createElement('button');button.type='button';button.className='character-option';
+      button.dataset.avatarId=String(index);
+      button.setAttribute('aria-label',`${avatar.name} 캐릭터 선택`);
+      button.append(avatarImage(index, true));
+      button.addEventListener('click',()=>{avatarChoice=index;refreshPickers();});
+      track.append(button);
+    });
+    row.append(heading,track);avPick.append(row);
+  }
+  addCharacterRow('여성',selectableAvatarIds.filter(id=>avatars[id].name.startsWith('여성')));
+  addCharacterRow('남성',selectableAvatarIds.filter(id=>avatars[id].name.startsWith('남성')));
   refreshPickers();
 
   const MARKER_V3=/\n\[\[wed:v3,a=(\d{1,2})\]\]$/;
@@ -541,9 +585,8 @@
    * guests are added, with independent touch scrolling (no page-wide overflow).
    */
   const portraitViewport=$('portraitViewport');
-  const portraitLeft=$('portraitLeftGuests');
-  const portraitRight=$('portraitRightGuests');
-  const portraitParty=$('portraitParty');
+  const portraitGuests = $('portraitGuests');
+  const portraitParty = $('portraitParty');
   function updatePortraitHint() {
     const hasMore=portraitViewport.scrollWidth>portraitViewport.clientWidth+5;
     $('portraitScrollHint').textContent=hasMore
@@ -556,49 +599,106 @@
     updatePortraitHint();
   }
   addEventListener('resize',updatePortraitHint,{passive:true});
-  function renderRoom(rows,total=rows.length) {
-    portraitLeft.replaceChildren();portraitRight.replaceChildren();
-    setText('roomCounter',`${total.toLocaleString('ko-KR')}명의 하객`);
-    const sides=[[],[]];
-    rows.forEach((row,i)=>sides[i%2].push({row,index:i}));
-    // Preserve 3 empty columns beside the couple even with the first guest.
-    const columns=Math.max(3,Math.ceil(Math.max(sides[0].length,sides[1].length)/2));
-    portraitParty.style.setProperty('--portrait-columns',columns);
-    const partyWidth=columns*2*72+144;
-    portraitParty.style.setProperty('--portrait-width',`${partyWidth}px`);
-    $('portraitStage').style.setProperty('--stage-width',`${Math.max(710,partyWidth+36)}px`);
-    sides.forEach((items,side)=>{
-      const parent=side===0?portraitLeft:portraitRight;
-      items.forEach(({row,index},position)=>{
-        const meta=unpackMessage(row.message);
-        const button=document.createElement('button');button.type='button';button.className='portrait-avatar';
-        button.setAttribute('aria-label',`${row.name||'하객'}님의 축하 메시지 보기`);
-        const col=Math.floor(position/2);
-        button.style.gridColumn=side===0?String(columns-col):String(col+1);
-        const rowOrder=[2,1];
-        const rowNumber=rowOrder[position%2];
-        button.style.gridRow=String(rowNumber);
-        button.classList.add(rowNumber===1?'is-upper':'is-lower');
-        const name=document.createElement('span');
-        name.className='portrait-avatar-name';
-        // Show at most four user-perceived characters, preserving the full name
-        // in the button's accessible label and the actual guestbook message.
-        const fullName=String(row.name||'하객');
-        const compactName=fullName.replace(/\s+/g,'');
-        const units=(typeof Intl.Segmenter==='function')
-          ? [...new Intl.Segmenter('ko',{granularity:'grapheme'}).segment(compactName)].map(part=>part.segment)
-          : Array.from(compactName);
-        name.textContent=units.slice(0,4).join('');
-        button.append(avatarImage(meta.avatar),name);
-        button.addEventListener('click',()=>{
-          void showMessagePageFor(index);
-        });parent.append(button);
+ 
+  function renderRoom(rows, total = rows.length) {
+    portraitGuests.replaceChildren();
+
+    setText(
+      'roomCounter',
+      `${total.toLocaleString('ko-KR')}명의 하객`
+    );
+
+    const cellWidth = 50;
+
+    // 충분한 공간을 확보하면서 3줄로 배치
+    const columns = Math.max(
+      6,
+      2 * Math.ceil(Math.ceil((rows.length + 2) / 3) / 2)
+    );
+
+    const centerLeft = columns / 2 - 1;
+    const centerRight = columns / 2;
+
+    // 중앙에서 바깥쪽으로 순서대로 채우기
+    const columnOrder = [];
+
+    for (let d = 0; d < columns / 2; d++) {
+      columnOrder.push(centerLeft - d, centerRight + d);
+    }
+
+    const positions = [];
+
+    for (const col of columnOrder) {
+      // 가운데줄 → 윗줄 → 아랫줄
+      for (const tier of [1, 0, 2]) {
+        // 신랑·신부가 서 있는 맨 앞 두 칸만 확보
+        if (
+          tier === 2 &&
+          (col === centerLeft || col === centerRight)
+        ) continue;
+
+        positions.push([col, tier]);
+      }
+    }
+
+    portraitParty.style.setProperty(
+      '--guest-columns',
+      String(columns)
+    );
+
+    portraitParty.style.setProperty(
+      '--portrait-width',
+      `${columns * cellWidth}px`
+    );
+
+    $('portraitStage').style.setProperty(
+      '--stage-width',
+      `${Math.max(390, columns * cellWidth + 24)}px`
+    );
+
+    rows.forEach((row, index) => {
+      const [col, tier] = positions[index];
+      const meta = unpackMessage(row.message);
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'portrait-avatar';
+
+      button.style.gridColumn = String(col + 1);
+      button.style.gridRow = String(tier + 1);
+
+      button.setAttribute(
+        'aria-label',
+        `${row.name || '하객'}님의 축하 메시지 보기`
+      );
+
+      const name = document.createElement('span');
+      name.className = 'portrait-avatar-name';
+
+      const fullName = String(row.name || '하객')
+        .replace(/\s+/g, '');
+
+      const units = typeof Intl.Segmenter === 'function'
+        ? [...new Intl.Segmenter('ko', {
+            granularity: 'grapheme'
+          }).segment(fullName)].map(x => x.segment)
+        : Array.from(fullName);
+
+      name.textContent = units.slice(0, 4).join('');
+
+      button.append(avatarImage(meta.avatar), name);
+
+      button.addEventListener('click', () => {
+        void showMessagePageFor(index);
       });
+
+      portraitGuests.append(button);
     });
+
     requestAnimationFrame(centerPortrait);
   }
-  // Compact guestbook list, 3 messages per page. Supabase's existing
-  // batch loader still supplies the portrait and fetches more as required.
+
+
   const MESSAGES_PER_PAGE=3;
   let messagePage=0;
   function renderMessagePage() {
