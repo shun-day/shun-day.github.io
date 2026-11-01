@@ -84,7 +84,7 @@ function playOpeningMusic() {
 
   if (!audio) return;
 
-  audio.volume = 0.55;
+  audio.volume = 0.35;
 
   audio.play().catch(() => {
   });
