@@ -1,877 +1,720 @@
-'use strict';
+/*
+ * Editorial wedding invitation · GitHub Pages / vanilla JavaScript
+ * 기존 data.js (WEDDING, PHOTOS, BOOK_IMAGES, ACCOUNTS) 및
+ * guestbook-config.js (WEDDING_GUESTBOOK_CONFIG)를 재사용합니다.
+ * 기존 book/page-fit/guestbook.js/storybook-art.js 는 불러오지 않습니다.
+ */
+(() => {
+  'use strict';
 
-// Allows CSS to hide the oversized pre-fit book only while this JS is active.
-document.documentElement.classList.add('wedding-fit-js');
+  const $ = id => document.getElementById(id);
+  const W = typeof WEDDING !== 'undefined' ? WEDDING : null;
+  const pics = typeof BOOK_IMAGES !== 'undefined' ? BOOK_IMAGES : {};
+  const allPhotos = typeof PHOTOS !== 'undefined' ? PHOTOS : [];
+  const accountData = typeof ACCOUNTS !== 'undefined' ? ACCOUNTS : {};
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.documentElement;
+  const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[char]));
+  const safeHttp = value => { try { const u = new URL(value, location.href); return /^https?:$/.test(u.protocol) ? u.href : ''; } catch { return ''; } };
+  const dateParts = W?.date?.split('-').map(Number) || [2027,4,3];
+  const fullDate = () => dateParts.map((p,i) => String(p).padStart(i === 0 ? 4 : 2,'0')).join('. ') + '.';
+  const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const weekdays = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+  let toastTimer = 0;
 
-/* ============================================================
-   밝은 클래식 동화책 청첩장 V5
-   - 단면 책 페이지 + 가벼운 전환 애니메이션
-   - 버튼만 눌러도 순서대로 읽을 수 있음
-   - 목차에서 개별 챕터로 직접 이동
-   - 펼친 첫 장에 예식 핵심정보와 목차 결합
-   - 사진 20장(4장씩 5면) + 6개 계좌정보 자리
-   ============================================================ */
-
-
-const CHAPTERS = [
-  {
-    id: 'story',
-    ko: '초대의 글',
-    en: 'Our Story',
-    intro: '두 사람의 첫 문장을 함께 열어주세요.'
-  },
-  {
-    id: 'day',
-    ko: '예식일',
-    en: 'Wedding Day',
-    intro: '가장 특별한 하루를 기억해주세요.'
-  },
-  {
-    id: 'venue',
-    ko: '오시는 길 · 하객 안내',
-    en: 'The Venue',
-    intro: '오시는 길과 주차·대중교통을 안내합니다.'
-  },
-  {
-    id: 'gallery',
-    ko: '웨딩 앨범',
-    en: 'Our Memories',
-    intro: '함께한 순간들이 한 권의 추억이 됩니다.'
-  },
-  {
-    id: 'guestbook',
-    ko: '축하 방명록',
-    en: 'Guestbook',
-    intro: '따뜻한 축하의 말을 한 장씩 모았습니다.'
-  },
-  {
-    id: 'love',
-    ko: '마음 전하기',
-    en: 'With Love',
-    intro: '따뜻한 축복에 깊이 감사드립니다.'
+  if (!W) {
+    document.body.innerHTML = '<p style="text-align:center;padding:60px 20px;font:700 16px sans-serif">data.js를 찾을 수 없습니다. 기존 프로젝트의 data.js 파일을 같은 폴더에 놓아주세요.</p>';
+    return;
   }
-];
 
-const PAGE_IDS = ['cover', 'contents', ...CHAPTERS.map(item=>item.id)];
-const PAGE_TIME = 390;
-const $ = id => document.getElementById(id);
-const book = $('book');
-const rightPage = $('rightPage');
-const isReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const enc = v => String(v ?? '').replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const chById = id => CHAPTERS.find(c => c.id === id);
-const humanDate = () => { const [y,m,d] = WEDDING.date.split('-'); return `${y}. ${m}. ${d}.`; };
-const timeAndHall = () => `${enc(WEDDING.timeLabel)} · ${enc(WEDDING.venue)}`;
-const photoNum = idx => String(idx + 1).padStart(2,'0');
-const nextIndex = id => PAGE_IDS.indexOf(id);
-const galleryPageCount = Math.ceil(PHOTOS.length / 4);
-let current = 'cover';
-let pending = null;
-let turning = false;
-let animationToken = 0;
-let galleryPage = 0;
-let lightboxIndex = -1;
-let lastLightboxFocus = null;
-let toastTimer = null;
+  const setText = (id, value) => { const node = $(id); if (node) node.textContent = String(value ?? ''); };
+  function toast(message) {
+    const el = $('toast');
+    clearTimeout(toastTimer); el.textContent = message; el.classList.add('is-visible');
+    toastTimer = setTimeout(() => el.classList.remove('is-visible'), 3200);
+  }
+  async function copyText(value, label = '복사되었습니다.') {
+    try {
+      if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(value);
+      else {
+        const ta = document.createElement('textarea'); ta.value = value;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+        document.body.append(ta); ta.select();
+        const result = document.execCommand('copy'); ta.remove();
+        if (!result) throw Error('copy unsupported');
+      }
+      toast(label);
+    } catch { toast('복사가 제한되었습니다. 해당 내용을 길게 눌러 복사해 주세요.'); }
+  }
+  const pad = n => String(n).padStart(2,'0');
 
-// One short storybook line per chapter. Keep the real information prominent.
-const CHAPTER_LINES = {
-  'Our Story': 'And then, there was us.',
-  'Wedding Day': 'A day to remember.',
-  'The Venue': 'Meet us here.',
-  'Our Memories': 'Little moments, forever.',
-  'Guestbook': 'Leave a little love.',
-  'With Love': 'Our forever begins.'
-};
-
-function chapterHeader(en, ko) {
-  return `<div class="page-kicker">${enc(CHAPTER_LINES[en] || 'Our little story')}</div>
-    <h2 class="page-heading">${en}</h2>
-    <p class="page-subhead">${ko}</p>
-    <div class="divider-ornament" aria-hidden="true">~ ❀ ~</div>`;
-}
-
-
-// The right-hand drawing MUST use the exact same scene key as the left leaf.
-// storybook-art.js recognizes garden, story, day, venue, gallery and love.
-function wrapPage(markup, pageId = 'contents') {
-  // Guestbook reuses the existing 'love' crayon art (storybook-art.js
-  // does not define a 'guestbook' scene).
-  const scene = pageId === 'contents' ? 'garden' : pageId === 'guestbook' ? 'love' : pageId;
-
-  return `<div class="page-inner page-${pageId}">
-    <div class="right-page-art" aria-hidden="true">
-      <canvas class="right-page-drawing" data-crayon="${scene}"></canvas>
-    </div>
-    ${markup}
-  </div>
-  <nav class="page-top-nav" aria-label="페이지 바로가기">
-    <button type="button" class="page-home-button" data-go="cover" aria-label="첫 페이지로 돌아가기">⌂ 첫페이지로</button>
-    <button type="button" class="page-toc-button" data-go="contents" aria-label="목차로 이동">목차 ☷</button>
-  </nav>`;
-}
-
-function illustration(id, cls = 'chapter-photo') {
-  const src = BOOK_IMAGES.chapter?.[id];
-
-  if (!src) return '';
-
-  return `
-    <img
-      src="${enc(src)}"
-      class="${enc(cls)}"
-      alt="${enc(
-        id === 'story'
-          ? '신랑 신부의 웨딩 사진'
-          : id === 'day'
-          ? '신랑 신부의 웨딩 기념 사진'
-          : '웨딩 사진'
-      )}"
-      loading="eager"
-      decoding="async"
-    >
-  `;
-}
-
-function lowerNav() { return ''; } // 중복된 본문 첫 페이지 버튼 삭제
-function safeMapUrl() {try {const url = new URL(WEDDING.mapUrl);return ['https:','http:'].includes(url.protocol) ? url.href : '';}catch{return '';}}
-function dateDiff() {
-  const target = new Date(`${WEDDING.date}T${WEDDING.time}:00`);
-  const days = Math.ceil((target.getTime() - Date.now()) / (1000*60*60*24));
-  if(!Number.isFinite(days)) return '';
-  if(days > 0) return `우리의 결혼식까지 D-${days}`;
-  if(days === 0) return '오늘, 우리의 이야기가 시작됩니다.';
-  return '함께해 주셔서 감사합니다.';
-}
-
-function coverMarkup() {
-  return `<div class="cover-layout cover-elegant">
-    <article class="elegant-sheet" aria-label="웨딩 청첩장 표지">
-      <div class="elegant-line elegant-line-left" aria-hidden="true"></div>
-      <div class="elegant-line elegant-line-right" aria-hidden="true"></div>
-      <div class="elegant-corner corner-tl" aria-hidden="true">❧</div>
-      <div class="elegant-corner corner-tr" aria-hidden="true">❧</div>
-      <div class="elegant-corner corner-bl" aria-hidden="true">❧</div>
-      <div class="elegant-corner corner-br" aria-hidden="true">❧</div>
-      <header class="elegant-heading">
-        <div class="elegant-kicker">Once upon a time...</div>
-        <h2 class="elegant-title"> A Wedding <em>storybook</em></h2>
-        <p class="elegant-year">${enc(WEDDING.date.slice(0,4))}</p>
-        <p class="elegant-tagline">OUR HAPPILY EVER AFTER</p>
-      </header>
-      <figure class="elegant-photo-frame">
-        <img src="${enc(BOOK_IMAGES.cover)}" class="elegant-photo" alt="신랑 신부 웨딩 사진" loading="eager" decoding="async">
-        <figcaption class="elegant-bow" aria-label="와인색 새틴 리본 장식">
-          <img src="wine-ribbon.webp" alt="" aria-hidden="true" decoding="async">
-        </figcaption>
-      </figure>
-      <section class="elegant-details">
-        <p class="elegant-names">${enc(WEDDING.bride)} <span>&amp;</span> ${enc(WEDDING.groom)}</p>
-        <p class="elegant-small-script">The beginning of our forever</p>
-        <p class="elegant-date">${enc(humanDate())}</p>
-        <p class="elegant-time">${enc(WEDDING.timeLabel)}</p>
-        <div class="elegant-rule" aria-hidden="true"><span>✦</span></div>
-        <p class="elegant-venue">${enc(WEDDING.venue)}</p>
-        <p class="elegant-hall">${enc(WEDDING.hall)}</p>
-      </section>
-      <div class="elegant-footnote">← 왼쪽으로 밀어 다음 장을 펼쳐보세요</div>
-    </article>
-  </div>`;
-}
-
-function accountRow(account, side, index) {
-  const filled = Boolean(account.bank && account.number && account.holder);
-  return `<div class="account-row"><div><strong>${enc(account.label)}</strong>
-     <span>${filled ? `${enc(account.bank)} · ${enc(account.number)}<br>예금주 ${enc(account.holder)}`:'계좌정보 입력 전'}</span></div>
-     <button type="button" ${filled?'':'disabled'} data-account-side="${side}" data-account-index="${index}">계좌 복사</button></div>`;
-}
-function accountGroup(side, open=false) {
-  const items=ACCOUNTS[side];
-  const title=side==='bride'?'신부측':'신랑측';
-  return `<details class="account-group" ${open?'open':''}><summary>${title} 계좌번호 <span>${items.length}개</span></summary>
-    <div class="account-rows">${items.map((a,i)=>accountRow(a,side,i)).join('')}</div></details>`;
-}
-const galleryCameraIcon = `<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="5" y="12" width="30" height="22" rx="3"/><path d="M13 12l2-5h10l2 5"/><circle cx="20" cy="23" r="6"/><path d="M9 17h3"/></svg>`;
-function photoTile(p, index) {
-  const has = Boolean(p.src);
-  if(!has) return `<div class="gallery-tile is-empty" aria-label="사진 ${photoNum(index)} 자리 (이미지 미등록)"><div class="placeholder">${galleryCameraIcon}<span>PHOTO ${photoNum(index)}</span></div></div>`;
-  return `<button type="button" class="gallery-tile" data-photo="${index}" aria-label="사진 ${photoNum(index)} 크게 보기"><img loading="lazy" decoding="async" src="${enc(p.src)}" alt="${enc(p.alt || `웨딩 사진 ${photoNum(index)}`)}"></button>`;
-}
-function galleryContents() {
-  const start=galleryPage*4;
-  return `<div class="gallery-pager">총 20장 · ${galleryPage+1} / ${galleryPageCount} 페이지</div>
-    <div class="gallery-grid">${PHOTOS.slice(start,start+4).map((p,i)=>photoTile(p,start+i)).join('')}</div>
-    <div class="gallery-controls"><button type="button" data-gallery-move="-1" ${galleryPage===0?'disabled':''}>← 이전 사진</button>
-      <div class="gallery-dots" aria-hidden="true">${Array.from({length:galleryPageCount},(_,i)=>`<i class="${i===galleryPage?'active':''}"></i>`).join('')}</div>
-      <button type="button" data-gallery-move="1" ${galleryPage===galleryPageCount-1?'disabled':''}>다음 사진 →</button></div>`;
-}
-
-const TOC_BUTTONS = [
-  {id:'story', text:'초대의 글', icon:'letter', desc:'초대의 마음'},
-  {id:'day', text:'예식 일시', icon:'calendar', desc:'날짜와 시간'},
-  {id:'venue', text:'오시는 길', icon:'pin', desc:'예식장 안내'},
-  {id:'gallery', text:'우리의 사진', icon:'photo', desc:'웨딩 앨범'},
-  {id:'guestbook', text:'방명록 남기기', icon:'message', desc:'축하의 한마디'},
-  {id:'love', text:'마음 전하기', icon:'heart', desc:'축하의 마음'}
-];
-
-function inkIcon(name){
-  const paths = {
-    calendar:'<rect x="4" y="6" width="16" height="15" rx="1.5"/><path d="M8 3v6M16 3v6M4 11h16M8 15h3"/>',
-    pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1116 0Z"/><circle cx="12" cy="10" r="2.5"/>',
-    photo:'<rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m4 18 5-5 4 3 3-4 5 6"/>',
-    car:'<path d="m5 11 2-6h10l2 6M4 16v-5h16v5M4 16h16M7 16v2M17 16v2"/><circle cx="7" cy="14" r="1"/><circle cx="17" cy="14" r="1"/>',
-    heart:'<path d="M20 8.6c0 4.3-8 10.3-8 10.3S4 12.9 4 8.6C4 3.5 10.1 3.4 12 7c1.9-3.6 8-3.5 8 1.6Z"/>',
-    message:'<path d="M20 16a3 3 0 0 1-3 3H9l-5 3v-4a3 3 0 0 1-2-3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3z"/><path d="M7 9h10M7 13h7"/>',
-    letter:'<rect x="3" y="6" width="18" height="13" rx="1"/><path d="m3 8 9 7 9-7"/>'
-  };
-  return `<svg class="ink-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${paths[name]||''}</svg>`;
-}
-function contentsMarkup() {
-  const featurePhoto = BOOK_IMAGES.contents || BOOK_IMAGES.cover || '';
-  return wrapPage(`<div class="contents-layout">
-    <div class="contents-kicker">Turn the page with us.</div>
-    <div class="contents-names">${enc(WEDDING.bride)} <span>&</span> ${enc(WEDDING.groom)}</div>
-    <div class="contents-date">${enc(humanDate())}</div>
-    <div class="contents-time">${enc(WEDDING.timeLabel)}</div>
-    <div class="contents-location">${enc(WEDDING.venue)} <span>·</span> ${enc(WEDDING.hall)}</div>
-    <div class="contents-flourish" aria-hidden="true">~ ❀ ~</div>
-    ${featurePhoto ? `<div class="contents-photo-card">
-      <img class="contents-feature-photo" src="${enc(featurePhoto)}" alt="${enc(`${WEDDING.bride}와 ${WEDDING.groom}의 웨딩 사진`)}" loading="eager" decoding="async">
-    </div>` : ''}
-    <p class="contents-divider">원하시는 메뉴를 버튼처럼 바로 눌러보세요</p>
-    <nav class="contents-buttons" aria-label="예식 안내 목차">
-      ${TOC_BUTTONS.map(item=>`<button type="button" class="contents-button" data-go="${item.id}" aria-label="${item.text} 페이지로 이동">
-        <span class="contents-button-icon">${inkIcon(item.icon)}</span>
-        <span class="contents-button-copy">
-          <strong>${item.text}</strong>
-          <small>${item.desc}</small>
-        </span>
-      </button>`).join('')}
-    </nav>
-    <canvas class="contents-botanical" data-crayon="botanical" aria-hidden="true"></canvas>
-  </div>`);
-}
-
-function transitMarkup() {
-  const lines = String(WEDDING.transit || '')
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .filter(Boolean);
-
-  const subway = [];
-  const buses = [];
-
-  let section = '';
-
-  for (const line of lines) {
-    if (line === '[지하철 이용 시]') {
-      section = 'subway';
-      continue;
+  /* Intro: sealed envelope → paper rises → site unlocks. */
+  const opening = $('openingScreen');
+  const content = $('siteContent');
+  document.body.classList.add('is-locked');
+  let opened = false;
+  function finishOpening(target) {
+    content.inert = false;
+    document.body.classList.remove('is-locked');
+    opening.hidden = true;
+    if (target) {
+      requestAnimationFrame(() => $(target)?.scrollIntoView({behavior:'instant',block:'start'}));
+    } else {
+      window.scrollTo({top:0,behavior:'instant'});
     }
+    initBackend();
+  }
+  function openInvitation(target, immediate = false) {
+    if (opened) return;
+    opened = true;
+    $('openEnvelope').disabled = true;
+    opening.classList.add('is-opening');
+    const duration = immediate || reducedMotion ? 0 : 1050;
+    setTimeout(() => {
+      opening.classList.add('is-dismissing');
+      setTimeout(() => finishOpening(target), immediate || reducedMotion ? 0 : 550);
+    }, duration);
+  }
+  $('openEnvelope').addEventListener('click', () => openInvitation());
+  $('openTextButton').addEventListener('click', () => openInvitation());
 
-    if (line === '[버스 이용 시]') {
-      section = 'bus';
-      continue;
-    }
-
-    if (section === 'subway') subway.push(line);
-    if (section === 'bus') buses.push(line);
+  /* Old invitation hashes must continue working for links already shared. */
+  const oldHash = location.hash.match(/^#\/chapter\/(cover|contents|story|day|venue|gallery|guestbook|love)$/)?.[1];
+  if (oldHash && oldHash !== 'cover') openInvitation(oldHash === 'contents' ? 'quick-links' : oldHash, true);
+  else if (/^#(story|day|venue|gallery|guestbook|love|quick-links)$/.test(location.hash)) {
+    openInvitation(location.hash.slice(1), true);
   }
 
-  const subwayHTML = subway.map(line => {
-    const pos = line.indexOf(':');
-
-    const name = pos >= 0
-      ? line.slice(0, pos).trim()
-      : '';
-
-    const description = pos >= 0
-      ? line.slice(pos + 1).trim()
-      : line;
-
-    const number = name.match(/\d+/)?.[0] || '';
-
-    const walking = description.match(/\(도보\s*\d+분\)/);
-
-    const station = walking
-      ? description.replace(walking[0], '').trim()
-      : description;
-
-    const walkingText = walking
-      ? walking[0].replace(/[()]/g, '')
-      : '';
-
-    return `
-      <div class="transit-line">
-
-        <span class="transit-number line-${number}">
-          ${enc(number)}
-        </span>
-
-        <span class="transit-station">
-          ${enc(station)}
-        </span>
-
-        <span class="transit-walk">
-          ${enc(walkingText)}
-        </span>
-
-      </div>
-    `;
-  }).join('');
-
-  const busHTML = buses.map(line => {
-    const pos = line.indexOf(':');
-
-    const name = pos >= 0
-      ? line.slice(0, pos).trim()
-      : '';
-
-    const routes = pos >= 0
-      ? line.slice(pos + 1).trim()
-      : line;
-
-    return `
-      <div class="bus-group">
-        <div class="bus-group-title">
-          ${enc(name)}
-        </div>
-        <p>${enc(routes)}</p>
-      </div>
-    `;
-  }).join('');
-
-  return `
-    <div class="transit-subway">
-      ${subwayHTML}
-    </div>
-
-    <details class="venue-bus-details">
-      <summary>
-        <span>버스 노선 안내</span>
-        <span class="bus-toggle-text">펼쳐보기</span>
-      </summary>
-
-      <div class="bus-list">
-        ${busHTML}
-      </div>
-    </details>
-  `;
-}
-
-
-function rightMarkup(id) {
-  if(id==='contents') return contentsMarkup();
-  
-  if (id === 'story') {
-    return wrapPage(`
-      ${chapterHeader('Our Story', '초대의 글')}
-
-      <div class="page-body centered story-body">
-        ${illustration('story', 'chapter-photo story-photo')}
-
-        <p class="main-copy">
-          ${enc(WEDDING.greeting)}
-        </p>
-        <canvas class="crayon-divider" data-crayon="sprig" aria-hidden="true"></canvas>
-      </div>
-
-      ${lowerNav()}
-    `, id);
+  /* Preserve the original optional background track without the old book DOM. */
+  const music=$('weddingBackgroundMusic');
+  const musicToggle=$('musicToggle');
+  music.volume=.55;
+  musicToggle.addEventListener('click',async()=>{
+    if (!music.paused) {music.pause();return;}
+    try {await music.play();}
+    catch (error) {console.info('Music unavailable:',error);toast('음원 재생이 제한되었습니다. Antifreeze.mp3 파일을 확인해 주세요.');}
+  });
+  function updateMusicButton() {
+    const playing=!music.paused&&!music.ended;
+    musicToggle.classList.toggle('is-playing',playing);
+    musicToggle.setAttribute('aria-pressed',String(playing));
+    musicToggle.setAttribute('aria-label',playing?'배경음악 끄기':'배경음악 켜기');
+    musicToggle.title=playing?'배경음악 끄기':'배경음악 켜기';
+    musicToggle.textContent=playing?'♫':'♪';
   }
+  music.addEventListener('play',updateMusicButton);
+  music.addEventListener('pause',updateMusicButton);
+  music.addEventListener('ended',updateMusicButton);
+  updateMusicButton();
 
-  
-  if (id === 'day') {
-    return wrapPage(`
-      ${chapterHeader('Wedding Day', '예식일')}
-
-      <div class="page-body centered day-body">
-        ${illustration('day', 'chapter-photo day-photo')}
-
-        <div class="date-big">
-          ${enc(humanDate())}
-        </div>
-
-        <div class="time-big">
-          ${enc(WEDDING.timeLabel)}
-        </div>
-
-        <div class="info-box">
-          <h3>${enc(WEDDING.venue)}</h3>
-          <p>${enc(WEDDING.hall)}</p>
-        </div>
-
-        <p class="muted">
-          ${enc(dateDiff())}
-        </p>
-
-        <button
-          type="button"
-          class="page-action"
-          id="calendarBtn">
-          달력에 일정 추가
-        </button>
-      </div>
-
-      ${lowerNav()}
-    `, id);
+  /* Header menu stays available even when the large 2×3 menu is far above. */
+  const menu = $('quickMenuOverlay');
+  const menuToggle = $('menuToggle');
+  const menuClose = $('menuClose');
+  function toggleMenu(show) {
+    menu.hidden = !show;
+    menuToggle.setAttribute('aria-expanded', String(show));
+    document.body.classList.toggle('is-locked', show);
+    if (show) menuClose.focus();
+    else menuToggle.focus({preventScroll:true});
   }
-
-  
-  if (id === 'venue') {
-
-    const freeMatch = WEDDING.parking.match(
-      /\d+\s*분\s*무료/
-    );
-
-    const freeLabel = freeMatch?.[0] || '';
-
-    const parkingDescription = freeLabel
-      ? WEDDING.parking
-          .replace(/\s*\/\s*\d+\s*분\s*무료/, '')
-          .trim()
-      : WEDDING.parking;
-
-    return wrapPage(`
-      ${chapterHeader('The Venue', '오시는 길 · 하객 안내')}
-
-      <div class="page-body venue-body venue-redesign">
-
-        <section class="venue-card venue-location">
-
-          <div class="venue-eyebrow">
-            WEDDING LOCATION
-          </div>
-
-          <h3 class="venue-main-name">
-            ${enc(WEDDING.venue)}
-          </h3>
-
-          <p class="venue-hall">
-            ${enc(WEDDING.hall)}
-          </p>
-
-          <p class="venue-address">
-            ${enc(WEDDING.address)}
-          </p>
-
-          <div class="venue-links">
-
-            <button
-              type="button"
-              class="venue-link"
-              data-copy-address>
-              주소 복사
-            </button>
-
-            ${safeMapUrl() ? `
-              <a
-                class="venue-link primary"
-                href="${enc(safeMapUrl())}"
-                target="_blank"
-                rel="noopener noreferrer">
-                지도 열기 ↗
-              </a>
-            ` : ''}
-
-          </div>
-
-        </section>
-
-        <section class="venue-card venue-parking">
-
-          <div class="venue-section-heading">
-            <h3>주차 안내</h3>
-
-            ${freeLabel ? `
-              <span class="parking-badge">
-                ${enc(freeLabel)}
-              </span>
-            ` : ''}
-          </div>
-
-          <p>${enc(parkingDescription)}</p>
-
-        </section>
-
-        <section class="venue-card venue-transport">
-
-          <div class="venue-section-heading">
-            <h3>대중교통 안내</h3>
-          </div>
-
-          ${transitMarkup()}
-
-        </section>
-
-      </div>
-
-      ${lowerNav()}
-    `, id);
-  }
-
-  
-  if (id === 'gallery') {
-    return wrapPage(`
-      ${chapterHeader('Our Memories', '웨딩 앨범')}
-
-      <div class="page-body gallery-body">
-        ${galleryContents()}
-        <p class="muted">
-          사진을 누르면 크게 볼 수 있어요.
-        </p>
-      </div>
-
-      ${lowerNav()}
-    `, id);
-  }
-  if (id === 'guestbook') {
-    return wrapPage(`
-      ${chapterHeader('Guestbook', '축하 방명록')}
-      <div class="page-body guestbook-body">
-        <div class="guestbook-mount" aria-label="축하 방명록">
-          <p class="guestbook-loading" role="status">방명록을 준비하고 있습니다.</p>
-        </div>
-      </div>
-    `, id);
-  }
-  if(id==='love') return wrapPage(`${chapterHeader('With Love','마음 전하기')}<div class="page-body">
-    ${illustration('love')}<p class="account-hint">마음을 전하실 분들을 위해 안내드립니다.<br>신랑측 · 신부측을 눌러 확인해 주세요.</p>
-    ${accountGroup('bride')}${accountGroup('groom')}
-    </div>${lowerNav()}`, id);
-  return '';
-}
-
-
-function hashToId() {
-  const match = location.hash.match(
-    /^#\/chapter\/([a-z]+)$/
-  );
-
-  const id = match?.[1] === 'guide'
-    ? 'venue'
-    : match?.[1];
-
-  return PAGE_IDS.includes(id) ? id : 'cover';
-}
-
-// A single permanent page remains mounted. During a swipe we rotate only
-// a temporary paper leaf, not the old two-page 3D book assembly.
-function updateNav(){
-  book.dataset.closed = String(current === 'cover');
-  const status = $('pageStatus');
-  if(status){
-    const chapter = chById(current);
-    status.textContent = current === 'cover' ? '표지'
-      : current === 'contents' ? '예식 안내 바로가기'
-      : `${chapter?.ko || ''} · ${nextIndex(current)-1} / ${CHAPTERS.length}`;
-  }
-}
-function pageHTML(target){
-  return target === 'cover' ? coverMarkup() : rightMarkup(target);
-}
-function renderPage(target){
-  rightPage.innerHTML = pageHTML(target);
-  current = target;
-  rightPage.scrollTop = 0;
-  rightPage.querySelector('.page-inner')?.scrollTo(0,0);
-  updateNav();
-}
-function navigate(target){
-  if(!PAGE_IDS.includes(target)) return;
-  if(turning){pending = target; return;}
-  if(target === current) return;
-  if(isReducedMotion()) { renderPage(target); return; }
-
-  turning = true;
-  const token = ++animationToken;
-  const forward = nextIndex(target) > nextIndex(current);
-  const leaf = document.createElement('div');
-  leaf.className = `turning-paper ${forward ? 'turning-forward' : 'turning-backward'}`;
-  leaf.setAttribute('aria-hidden','true');
-  book.classList.add('is-turning');
-
-  if (forward) {
-    // MOVE existing children rather than cloning. This preserves painted
-    // crayon canvases and avoids a duplicate sheet at the same z-depth.
-    while (rightPage.firstChild) leaf.appendChild(rightPage.firstChild);
-    rightPage.innerHTML = pageHTML(target);
-    rightPage.appendChild(leaf);
-  } else {
-    // The previous sheet unfolds on top of the existing page.
-    leaf.innerHTML = pageHTML(target);
-    rightPage.appendChild(leaf);
-  }
-
-  // The actual page stays still. Only the temporary paper is transformed.
-  // A double RAF lets WebKit settle the initial painted layout first.
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    if (token === animationToken) leaf.classList.add('turning-active');
+  menuToggle.addEventListener('click', () => toggleMenu(true));
+  menuClose.addEventListener('click', () => toggleMenu(false));
+  menu.querySelector('[data-close-menu]').addEventListener('click', () => toggleMenu(false));
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    toggleMenu(false);
+    const target = a.getAttribute('href').slice(1);
+    requestAnimationFrame(() => $(target)?.scrollIntoView({behavior:reducedMotion?'instant':'smooth'}));
   }));
 
-  const done = () => {
-    if (token !== animationToken) return;
-    if (!forward) {
-      const fragment = document.createDocumentFragment();
-      while (leaf.firstChild) fragment.appendChild(leaf.firstChild);
-      leaf.remove();
-      rightPage.replaceChildren(fragment);
-    } else {
-      leaf.remove();
-    }
-    current = target;
-    rightPage.scrollTop = 0;
-    rightPage.querySelector('.page-inner')?.scrollTo(0,0);
-    updateNav();
-    book.classList.remove('is-turning');
-    turning = false;
-    const queued = pending ?? hashToId();
-    pending = null;
-    if (queued !== current) requestAnimationFrame(() => navigate(queued));
-  };
+  /* Content from existing data.js, no hardcoded couple/venue. */
+  setText('envelopeNames', `${W.bride} & ${W.groom}`);
+  setText('envelopeDate', fullDate());
+  setText('envelopePrintedNames', `${W.bride}  &  ${W.groom}`);
+  setText('envelopePrintedDate', fullDate());
+  $('heroNames').innerHTML = `${escapeHTML(W.bride)} <span>&amp;</span> ${escapeHTML(W.groom)}`;
+  setText('heroLocation', `${W.venue} · ${W.hall}`);
+  setText('heroDate', `${fullDate()} ${weekdays[new Date(dateParts[0],dateParts[1]-1,dateParts[2]).getDay()]}`);
+  setText('invitationText', W.greeting);
+  $('storySignature').innerHTML = `${escapeHTML(W.bride)} <span>&amp;</span> ${escapeHTML(W.groom)}`;
+  setText('footerNames', `${W.bride} & ${W.groom}`);
 
-  // WebViews may throttle transition events; use a bounded fallback.
-  const fallback = setTimeout(done, 570);
-  leaf.addEventListener('transitionend', event => {
-    if (event.target !== leaf || event.propertyName !== 'transform') return;
-    clearTimeout(fallback);
-    done();
-  }, {once: true});
-}
-function go(id){
-  if(!PAGE_IDS.includes(id)) return;
-  const hash = `#/chapter/${id}`;
-  if(location.hash !== hash) location.hash = hash;
-  else navigate(id);
-}
-function notify(text){
-  clearTimeout(toastTimer);
-  $('toast').textContent=text;$('toast').classList.add('show');
-  toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2500);
-}
-async function copyText(text){
-  if(!text){notify('아직 정보가 입력되지 않았습니다.');return;}
-  try {if(navigator.clipboard && window.isSecureContext){await navigator.clipboard.writeText(text);notify('복사되었습니다.');return;}}
-  catch { /* fallback below */ }
-  const area=document.createElement('textarea');
-  area.value=text;area.setAttribute('readonly','');area.style.cssText='position:fixed;left:-10000px;top:0';
-  document.body.appendChild(area);area.select();
-  let success=false;
-  try {success=document.execCommand('copy');}catch{success=false;}
-  area.remove();
-  notify(success?'복사되었습니다.':'복사할 수 없습니다. 내용을 길게 눌러 복사해 주세요.');
-}
-function calendar(){
-  const compact=WEDDING.date.replaceAll('-','');
-  const h=Number(WEDDING.time.slice(0,2));
-  const m=WEDDING.time.slice(3,5);
-  const begin=`${compact}T${WEDDING.time.replace(':','')}00`;
-  const finishHour=String((h+1)%24).padStart(2,'0');
-  const endDate=(h===23 ? new Date(`${WEDDING.date}T12:00:00`) : null);
-  if(endDate)endDate.setDate(endDate.getDate()+1);
-  const endDateStr=endDate?`${endDate.getFullYear()}${String(endDate.getMonth()+1).padStart(2,'0')}${String(endDate.getDate()).padStart(2,'0')}`:compact;
-  const end=`${endDateStr}T${finishHour}${m}00`;
-  const params=new URLSearchParams({action:'TEMPLATE',text:`${WEDDING.bride} ♥ ${WEDDING.groom} 결혼식`,dates:`${begin}/${end}`,details:WEDDING.venue,location:WEDDING.address});
-  window.open(`https://calendar.google.com/calendar/render?${params.toString()}`,'_blank','noopener,noreferrer');
-}
-function availablePhotoIndices(){return PHOTOS.map((p,i)=>p.src?i:-1).filter(i=>i>=0);}
-function showPhoto(index){
-  if(!PHOTOS[index] || !PHOTOS[index].src)return;
-  lastLightboxFocus=document.activeElement;
-  lightboxIndex=index;
-  $('lightboxImage').src=PHOTOS[index].src;
-  $('lightboxImage').alt=PHOTOS[index].alt || `웨딩 사진 ${photoNum(index)}`;
-  $('lightboxCounter').textContent=`${index+1} / ${PHOTOS.length}`;
-  $('lightbox').hidden=false;
-  $('lightboxClose').focus();
-}
-function closePhoto(){
-  $('lightbox').hidden=true;
-  $('lightboxImage').removeAttribute('src');
-  lightboxIndex=-1;
-  if(lastLightboxFocus && typeof lastLightboxFocus.focus==='function')lastLightboxFocus.focus();
-}
-function movePhoto(delta){
-  const choices=availablePhotoIndices();
-  if(choices.length===0)return;
-  const selected=choices.indexOf(lightboxIndex);
-  const next=choices[(selected+delta+choices.length)%choices.length];
-  lightboxIndex=next;
-  $('lightboxImage').src=PHOTOS[next].src;
-  $('lightboxImage').alt=PHOTOS[next].alt;
-  $('lightboxCounter').textContent=`${next+1} / ${PHOTOS.length}`;
-}
-
-window.addEventListener('hashchange',()=>navigate(hashToId()));
-document.addEventListener('click',e=>{
-  const el=e.target.closest('button,a');
-  if(!el)return;
-  
-  if (el.dataset.go) {
-    go(el.dataset.go);
-    return;
+  function assignPhoto(id, candidates) {
+    const img = $(id);
+    const valid = candidates.filter(Boolean);
+    if (!valid.length) { img.closest('figure,.love-photo,.hero-photo-wrap')?.setAttribute('hidden',''); return; }
+    let index = 0;
+    img.src = valid[index];
+    img.addEventListener('error', () => {
+      index += 1;
+      if (index < valid.length) img.src = valid[index];
+      else img.alt = '사진을 불러오지 못했습니다. data.js의 이미지 경로를 확인해 주세요.';
+    });
   }
+  assignPhoto('heroPhoto',[pics.cover, pics.contents, ...allPhotos.map(p=>p.src)]);
+  assignPhoto('storyPhoto',[pics.chapter?.story,pics.inside,pics.cover]);
+  assignPhoto('lovePhoto',[pics.chapter?.love,pics.inside,pics.cover]);
 
-  if(el.dataset.galleryMove){
-    galleryPage=Math.max(0,Math.min(galleryPageCount-1,galleryPage+Number(el.dataset.galleryMove)));
-    if(current==='gallery'){rightPage.innerHTML=rightMarkup('gallery');}
-    return;
+  /* Date, calendar and .ics download. */
+  const koWeekdays = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  const koreanWeekday = koWeekdays[new Date(dateParts[0],dateParts[1]-1,dateParts[2]).getDay()];
+  setText('dayMonth', `${dateParts[0]}년 ${dateParts[1]}월`);
+  setText('dayMonthNumber', pad(dateParts[1]));
+  setText('dayNumber', pad(dateParts[2]));
+  setText('dayWeekday', koreanWeekday);
+  setText('dayReadable', `${dateParts[0]}년 ${dateParts[1]}월 ${dateParts[2]}일 ${koreanWeekday}`);
+  const [hour,minute] = String(W.time || '17:00').split(':').map(Number);
+  setText('dayTime', `${hour>=12?'오후':'오전'} ${hour%12 || 12}:${pad(minute)}`);
+  setText('dayVenue', W.venue);setText('dayHall',W.hall);
+  const daysFirst = new Date(dateParts[0],dateParts[1]-1,1).getDay();
+  const daysMax = new Date(dateParts[0],dateParts[1],0).getDate();
+  const cal = $('calendarGrid');
+  ['S','M','T','W','T','F','S'].forEach(d => { const s=document.createElement('span'); s.className='cal-head';s.textContent=d;cal.append(s); });
+  for(let i=0;i<daysFirst;i++) cal.append(document.createElement('span'));
+  for(let n=1;n<=daysMax;n++) {const span=document.createElement('span');span.textContent=n; if(n===dateParts[2]) {span.className='is-wedding';span.setAttribute('aria-label','결혼식 날짜');}cal.append(span);}
+  function updateCountdown() {
+    const target = new Date(`${W.date}T${W.time}:00+09:00`).getTime();
+    const days = Math.ceil((target-Date.now())/86400000);
+    setText('countdown', Number.isFinite(days) ? days > 0 ? `OUR DAY · D–${days}` : days === 0 ? 'TODAY IS OUR DAY ♡' : 'THANK YOU FOR CELEBRATING WITH US' : '');
   }
-  if(el.dataset.photo!==undefined){showPhoto(Number(el.dataset.photo));return;}
-  if(el.dataset.accountSide){
-    const a=ACCOUNTS[el.dataset.accountSide]?.[Number(el.dataset.accountIndex)];
-    if(a?.bank && a?.number && a?.holder)copyText(`${a.bank} ${a.number} (예금주 ${a.holder})`);
-    return;
-  }
-  if(el.dataset.copyAddress!==undefined){copyText(WEDDING.address);return;}
-  if(el.id==='calendarBtn'){calendar();return;}
-  if(el.id==='lightboxClose'){closePhoto();return;}
-  if(el.id==='lightboxPrev'){movePhoto(-1);return;}
-  if(el.id==='lightboxNext'){movePhoto(1);return;}
-});
-document.addEventListener('keydown',e=>{
-  if(!$('lightbox').hidden){
-    if(['Escape','ArrowRight','ArrowLeft'].includes(e.key))e.preventDefault();
-    if(e.key==='Escape')closePhoto();
-    if(e.key==='ArrowRight')movePhoto(1);
-    if(e.key==='ArrowLeft')movePhoto(-1);
-    return;
-  }
-  if(e.target instanceof Element && e.target.closest('a,button,summary,input,textarea,select'))return;
-  if(e.key==='ArrowRight'){e.preventDefault();go(PAGE_IDS[Math.min(PAGE_IDS.length-1,nextIndex(current)+1)]);}
-  if(e.key==='ArrowLeft'){e.preventDefault();go(PAGE_IDS[Math.max(0,nextIndex(current)-1)]);}
-});
-// Swipe a book page left/right without interfering with vertical scrolling.
-// Interactive controls stay tappable; fast horizontal gallery-photo gestures
-// are also recognized without opening the photo lightbox.
-(() => {
-  const surface = $('bookWindow');
-  if (!surface) return;
-
-  let start = null;
-  let suppressClickUntil = 0;
-
-  surface.addEventListener('touchstart', e => {
-    if (turning || e.touches.length !== 1 || !$('lightbox').hidden) {
-      start = null;
-      return;
-    }
-    if (e.target instanceof Element &&
-        e.target.closest('a, button, summary, input, textarea, select')) {
-      start = null;
-      return;
-    }
-    const touch = e.changedTouches[0];
-    start = { x: touch.clientX, y: touch.clientY, time: Date.now() };
-  }, {passive: true});
-
-  surface.addEventListener('touchend', e => {
-    if (!start || e.changedTouches.length !== 1) return;
-    const touch = e.changedTouches[0];
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-    start = null;
-    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.35) return;
-
-    // Prevent a swipe starting on a photo or menu tile from becoming a tap.
-    if (e.cancelable) e.preventDefault();
-    suppressClickUntil = Date.now() + 450;
-    const next = Math.max(0, Math.min(PAGE_IDS.length - 1,
-      nextIndex(current) + (dx < 0 ? 1 : -1)));
-    if (PAGE_IDS[next] !== current) go(PAGE_IDS[next]);
-  }, {passive: false});
-
-  surface.addEventListener('touchcancel', () => { start = null; }, {passive: true});
-  surface.addEventListener('click', e => {
-    if (Date.now() < suppressClickUntil) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      suppressClickUntil = 0;
-    }
-  }, true);
-
-  // A tap on the cover is also supported for desktop and accessibility,
-  // with no visible page-turn button.
-  surface.addEventListener('click', e => {
-    if (current !== 'cover' || turning) return;
-    if (e.target instanceof Element && e.target.closest('a,button')) return;
-    go('contents');
+  updateCountdown();
+  $('calendarAddButton').addEventListener('click', () => {
+    const start = new Date(`${W.date}T${W.time}:00+09:00`);
+    if (Number.isNaN(start.getTime())) { toast('예식 날짜를 확인해 주세요.');return; }
+    const dt = d => d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
+    const escapeICS = s => String(s).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+    const ics = [
+      'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Wedding Invitation//KR',
+      'BEGIN:VEVENT',`UID:wedding-${W.date}@shun-day.github.io`,
+      `DTSTAMP:${dt(new Date())}`,`DTSTART:${dt(start)}`,`DTEND:${dt(new Date(start.getTime()+3600000))}`,
+      `SUMMARY:${escapeICS(`${W.groom} & ${W.bride} 결혼식`)}`,
+      `LOCATION:${escapeICS(`${W.venue} ${W.hall} ${W.address}`)}`,
+      'END:VEVENT','END:VCALENDAR'
+    ].join('\r\n');
+    const url = URL.createObjectURL(new Blob([ics],{type:'text/calendar;charset=utf-8'}));
+    const a=document.createElement('a');a.href=url;a.download='wedding.ics';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    toast('일정 파일을 저장했습니다. 달력 앱에서 열어주세요.');
   });
-})();
 
-// 사진 확대 중 스와이프로 이전/다음
-let touchStartX=null;
-$('lightbox').addEventListener('touchstart',e=>{touchStartX=e.changedTouches[0]?.screenX ?? null;},{passive:true});
-$('lightbox').addEventListener('touchend',e=>{if(touchStartX===null)return;const diff=(e.changedTouches[0]?.screenX??touchStartX)-touchStartX;if(Math.abs(diff)>55)movePhoto(diff<0?1:-1);touchStartX=null;},{passive:true});
-// 사진 파일이 잘못 지정된 경우 깨진 이미지 대신 안내 문구
-window.addEventListener('error',e=>{
-  if(!(e.target instanceof HTMLImageElement) || !e.target.closest('.gallery-tile'))return;
-  const tile=e.target.closest('.gallery-tile');
-  tile.classList.add('is-empty');tile.removeAttribute('data-photo');tile.setAttribute('aria-label','이미지를 불러올 수 없습니다');
-  tile.innerHTML=`<div class="placeholder">${galleryCameraIcon}<span>이미지 확인 필요</span></div>`;
-},true);
+  /* A gallery that includes the photos already specified in PHOTOS and BOOK_IMAGES. */
+  const gallery = [];
+  const known = new Set();
+  function addGallery(src, alt) {
+    if (!src || known.has(src)) return;
+    known.add(src);gallery.push({src,alt});
+  }
+  allPhotos.forEach((photo,i) => addGallery(photo.src,photo.alt || `웨딩 사진 ${i+1}`));
+  addGallery(pics.cover,'청첩장 표지 사진');
+  addGallery(pics.contents,'웨딩 사진');
+  addGallery(pics.inside,'함께한 순간');
+  Object.values(pics.chapter || {}).forEach((src,i) => addGallery(src,`우리의 추억 ${i+1}`));
+  // Native horizontal gallery: all four-image editorial spreads are mounted
+  // in a single scrollable rail. Mobile browsers handle momentum and touch
+  // natively; no touchend thresholds, page re-rendering or nav buttons.
+  const PHOTO_SLIDE_SIZE = 4;
+  const totalGallerySlides = Math.max(1, Math.ceil(gallery.length / PHOTO_SLIDE_SIZE));
+  let openPhotoIndex = -1;
+  let prevPhotoFocus = null;
+  const galleryRail = $('galleryRail');
+  const photoGrid = $('photoGrid');
+  const galleryPageIndicator = $('galleryPageIndicator');
+  const galleryPageLabel = $('galleryPageLabel');
+  const galleryTotalCount = $('galleryTotalCount');
+  const gallerySliderProgressBar = $('gallerySliderProgressBar');
+  const gallerySlides = [];
+  function imageFallBack(img) {
+    img.addEventListener('error', () => {
+      img.alt = '사진을 불러오지 못했습니다. 이미지 경로를 확인해 주세요.';
+      img.classList.add('image-unavailable');
+    });
+  }
+  function renderGallerySlides() {
+    photoGrid.replaceChildren();
+    gallerySlides.length=0;
+    galleryTotalCount.textContent=`TOTAL ${pad(gallery.length)} PHOTOGRAPHS`;
+    if (!gallery.length) {
+      const empty = document.createElement('p');empty.className='gallery-empty';
+      empty.textContent='data.js에 앨범 사진을 등록해 주세요.';
+      photoGrid.append(empty);
+      galleryPageLabel.textContent='00 — 00';
+      galleryPageIndicator.textContent='00 / 00';
+      gallerySliderProgressBar.style.width='0%';
+      return;
+    }
+    for(let start=0;start<gallery.length;start+=PHOTO_SLIDE_SIZE) {
+      const group=gallery.slice(start,start+PHOTO_SLIDE_SIZE);
+      const slide=document.createElement('section');
+      slide.className='gallery-slide'+((start/PHOTO_SLIDE_SIZE)%2?' gallery-slide-alt':'');
+      slide.setAttribute('aria-label',`사진 ${start+1}번부터 ${start+group.length}번`);
+      group.forEach((photo,offset)=>{
+        const index=start+offset;
+        const tile=document.createElement('button');tile.type='button';tile.className='gallery-slide-photo';
+        tile.setAttribute('aria-label',`사진 ${index+1} 크게 보기`);
+        const img=document.createElement('img');img.src=photo.src;
+        img.alt=photo.alt;img.loading=index<4?'eager':'lazy';img.decoding='async';
+        img.draggable=false;
+        imageFallBack(img);
+        const tag=document.createElement('span');tag.className='gallery-slide-number';tag.textContent=pad(index+1);
+        tile.append(img,tag);
+        tile.addEventListener('click',()=>openLightbox(index));
+        slide.append(tile);
+      });
+      photoGrid.append(slide);
+      gallerySlides.push(slide);
+    }
+    updateGalleryProgress(0);
+  }
+  function updateGalleryProgress(active) {
+    const index=Math.max(0,Math.min(totalGallerySlides-1,active));
+    const start=index*PHOTO_SLIDE_SIZE;
+    galleryPageLabel.textContent=`${pad(start+1)} — ${pad(Math.min(gallery.length,start+PHOTO_SLIDE_SIZE))}`;
+    galleryPageIndicator.textContent=`${pad(index+1)} / ${pad(totalGallerySlides)}`;
+    gallerySliderProgressBar.style.width=`${((index+1)/totalGallerySlides)*100}%`;
+  }
+  function activeGallerySlide() {
+    if(!gallerySlides.length) return 0;
+    const left=galleryRail.scrollLeft;
+    let closest=0,minimum=Infinity;
+    gallerySlides.forEach((slide,index)=>{
+      const distance=Math.abs(slide.offsetLeft-left);
+      if(distance<minimum){minimum=distance;closest=index;}
+    });
+    return closest;
+  }
+  let progressRAF=0;
+  galleryRail.addEventListener('scroll',()=>{
+    if(progressRAF) return;
+    progressRAF=requestAnimationFrame(()=>{
+      progressRAF=0;updateGalleryProgress(activeGallerySlide());
+    });
+  },{passive:true});
+  galleryRail.addEventListener('keydown',event=>{
+    if(event.key!=='ArrowLeft' && event.key!=='ArrowRight') return;
+    event.preventDefault();
+    const direction=event.key==='ArrowRight'?1:-1;
+    const next=Math.max(0,Math.min(gallerySlides.length-1,activeGallerySlide()+direction));
+    const target=gallerySlides[next];
+    if(target) galleryRail.scrollTo({left:target.offsetLeft,behavior:reducedMotion?'instant':'smooth'});
+  });
+  renderGallerySlides();
+  function openLightbox(index) {
+    if(!gallery.length) return;
+    prevPhotoFocus=document.activeElement;
+    openPhotoIndex=(index+gallery.length)%gallery.length;
+    $('photoLightbox').hidden=false;document.body.classList.add('is-locked');
+    drawLightbox();$('lightboxClose').focus();
+  }
+  function drawLightbox() {
+    $('lightboxImage').src=gallery[openPhotoIndex].src;
+    $('lightboxImage').alt=gallery[openPhotoIndex].alt;
+    setText('lightboxCounter',`${pad(openPhotoIndex+1)} / ${pad(gallery.length)}`);
+  }
+  function moveLightbox(direction) {openPhotoIndex=(openPhotoIndex+direction+gallery.length)%gallery.length;drawLightbox();}
+  function closeLightbox() {$('photoLightbox').hidden=true;document.body.classList.remove('is-locked');prevPhotoFocus?.focus?.();}
+  $('lightboxPrev').addEventListener('click',()=>moveLightbox(-1));
+  $('lightboxNext').addEventListener('click',()=>moveLightbox(1));
+  $('lightboxClose').addEventListener('click',closeLightbox);
+  $('photoLightbox').addEventListener('click',e=>{if(e.target===$('photoLightbox'))closeLightbox();});
+  let swipedFrom=0;
+  $('photoLightbox').addEventListener('touchstart',e=>{swipedFrom=e.changedTouches[0]?.screenX||0;},{passive:true});
+  $('photoLightbox').addEventListener('touchend',e=>{const x=e.changedTouches[0]?.screenX||0;if(Math.abs(x-swipedFrom)>55)moveLightbox(x<swipedFrom?1:-1);},{passive:true});
+  document.addEventListener('keydown',e=>{
+    if (!$('photoLightbox').hidden) {
+      if(e.key==='Escape') closeLightbox();
+      else if(e.key==='ArrowLeft') moveLightbox(-1);
+      else if(e.key==='ArrowRight') moveLightbox(1);
+      else if(e.key==='Tab') { // Keep focus in the accessible photo dialog.
+        const buttons=[$('lightboxClose'),$('lightboxPrev'),$('lightboxNext')];
+        const i=buttons.indexOf(document.activeElement);
+        if(i>=0) {e.preventDefault();buttons[(i+(e.shiftKey?2:1))%3].focus();}
+      }
+    } else if(!menu.hidden && e.key==='Escape') toggleMenu(false);
+  });
 
-// Render only the current (right-hand) page at startup.
-renderPage(hashToId());
+  /* Transit with the exact lines from WEDDING.transit. */
+  setText('venueName',W.venue);setText('venueHall',W.hall);setText('venueAddress',W.address);
+  setText('parkingInfo',W.parking);
+  const mapURL=safeHttp(W.mapUrl);
+  if(mapURL) $('mapLink').href=mapURL;
+  else $('mapLink').hidden=true;
+  $('copyAddress').addEventListener('click',()=>copyText(W.address,'예식장 주소를 복사했습니다.'));
+  const transitLines=String(W.transit||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  let transitSection=''; const subway=[],bus=[];
+  for(const line of transitLines) {
+    if(line.includes('[지하철')) {transitSection='subway';continue;}
+    if(line.includes('[버스')) {transitSection='bus';continue;}
+    if(transitSection==='subway') subway.push(line);
+    if(transitSection==='bus') bus.push(line);
+  }
+  const subwayBox=$('subwayInfo');
+  subway.forEach(line=>{
+    const n=line.match(/^\s*(\d+)호선/);const row=document.createElement('div');row.className='transit-row';
+    if(n){const marker=document.createElement('span');marker.className=`line-circle line-${n[1]}`;marker.textContent=n[1];row.append(marker);}
+    const description=document.createElement('span');description.textContent=line.replace(/^\d+호선\s*:\s*/,'');row.append(description);subwayBox.append(row);
+  });
+  const busBox=$('busInfo');bus.forEach(line=>{const p=document.createElement('p');p.className='transit-text';p.textContent=line;busBox.append(p);});
+  if(!bus.length) document.querySelector('.bus-details').hidden=true;
 
-/* =====================================================
-   Responsive Book Stage — Mobile first / Kakao in-app safe
-   The visible leaf always fits the available viewport at open.
-   ===================================================== */
-(() => {
-  const LEAF_W = 390;
-  const win = $('bookWindow');
-  const main = $('mainArea');
-  const shell = document.querySelector('.site-shell');
-  if (!win || !main || !shell) return;
+  /* Account list, retains original account data as supplied. */
+  const accWrap=$('accounts');
+  [['bride','신부측'],['groom','신랑측']].forEach(([side,label])=>{
+    const list=Array.isArray(accountData[side])?accountData[side]:[];
+    const details=document.createElement('details');details.className='account-accordion';
+    const summary=document.createElement('summary');summary.innerHTML=`${label} 계좌 안내 <span aria-hidden="true">＋</span>`;details.append(summary);
+    list.forEach(account=>{
+      const item=document.createElement('div');item.className='account-entry';
+      const text=document.createElement('div');const strong=document.createElement('strong');strong.textContent=account.label;
+      const p=document.createElement('p');p.textContent=account.bank&&account.number&&account.holder?`${account.bank} ${account.number}\n예금주 ${account.holder}`:'계좌정보 준비 중';p.style.whiteSpace='pre-line';text.append(strong,p);
+      const btn=document.createElement('button');btn.type='button';btn.textContent='복사하기';
+      btn.disabled=!(account.bank&&account.number&&account.holder);
+      btn.addEventListener('click',()=>copyText(`${account.bank} ${account.number}`,'계좌번호를 복사했습니다.'));
+      item.append(text,btn);details.append(item);
+    });
+    accWrap.append(details);
+  });
+  $('shareButton').addEventListener('click',async()=>{
+    const url=`${location.origin}${location.pathname}`;
+    if(navigator.share) {
+      try {await navigator.share({title:`${W.groom} & ${W.bride} 결혼식`,text:'저희 두 사람의 소중한 시작에 초대합니다.',url});return;}
+      catch(e) {if(e.name==='AbortError') return;}
+    }
+    await copyText(url,'청첩장 주소를 복사했습니다.');
+  });
 
-  let frame = win.parentElement;
-  if (!frame?.classList.contains('book-fit-frame')) {
-    frame = document.createElement('div');
-    frame.className = 'book-fit-frame';
-    win.before(frame);
-    frame.append(win);
+  /* Fresh characters use a consistent transparent WebP sprite collection.
+   * Save a new v3 marker in the existing message column. Old v2 messages still display.
+   * No new guestbook database columns or room/furniture data are needed.
+   */
+  // Numeric IDs are stable because historic Supabase messages store them.
+  // Removed choices (IDs 2–5) are mapped to clothed alternatives for display.
+  const avatars = [
+    {name:'여성 1',image:'assets/guest-02-v15.webp'},
+    {name:'여성 2',image:'assets/guest-03-v15.webp'},
+    {name:'여성 3',image:'assets/guest-06-v15.webp'},
+    {name:'여성 4',image:'assets/guest-07-v15.webp'},
+    {name:'여성 5',image:'assets/guest-12-v15.webp'},
+    {name:'여성 6',image:'assets/guest-13-v15.webp'},
+    {name:'남성 1',image:'assets/guest-04-v15.webp'},
+    {name:'남성 2',image:'assets/guest-05-v15.webp'},
+    {name:'남성 3',image:'assets/guest-08-v15.webp'},
+    {name:'남성 4',image:'assets/guest-09-v15.webp'},
+    {name:'남성 5',image:'assets/guest-10-v15.webp'},
+    {name:'남성 6',image:'assets/guest-11-v15.webp'}
+  ];
+  const selectableAvatarIds = Array.from({length:avatars.length},(_,i)=>i);
+  function avatarImage(index) {
+    const avatar = avatars[Number.isInteger(index) && index>=0 && index<avatars.length ? index : 0];
+    const img=document.createElement('img');img.src=avatar.image;img.alt='';
+    img.loading='lazy';img.decoding='async';img.className='pixel-avatar';
+    return img;
+  }
+  let avatarChoice=0;
+  const avPick=$('characterPicker');
+  function refreshPickers() {
+    avPick.querySelectorAll('button').forEach(button=>{
+      const selected=Number(button.dataset.avatarId)===avatarChoice;
+      button.classList.toggle('is-selected',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    });
+  }
+  selectableAvatarIds.forEach(index=>{
+    const avatar=avatars[index];
+    const button=document.createElement('button');button.type='button';button.className='character-option';
+    button.dataset.avatarId=String(index);
+    button.setAttribute('aria-label',`${avatar.name} 캐릭터 선택`);
+    button.append(avatarImage(index));
+    const name=document.createElement('span');name.textContent=avatar.name;button.append(name);
+    button.addEventListener('click',()=>{avatarChoice=index;refreshPickers();});
+    avPick.append(button);
+  });
+  refreshPickers();
+
+  const MARKER_V3=/\n\[\[wed:v3,a=(\d{1,2})\]\]$/;
+  const MARKER_V2=/\n\[\[wed:v2,a=(\d{1,2}),f=(flowers|lamp|books)\]\]$/;
+  const packMessage=(message,avatar)=>`${message}\n[[wed:v3,a=${avatar}]]`;
+  function unpackMessage(message) {
+    const raw=String(message||'');const match=raw.match(MARKER_V3)||raw.match(MARKER_V2);
+    return match?{message:raw.slice(0,-match[0].length),avatar:Math.min(avatars.length-1,Math.max(0,Number(match[1])||0))}:
+      {message:raw,avatar:0};
+  }
+  let sbClient=null; let sbPromise=null; let backendStarted=false; let saving=false;
+  async function connectSupabase() {
+    if(sbClient) return sbClient;
+    const config=window.WEDDING_GUESTBOOK_CONFIG;
+    if(!config || !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(String(config.url||'')) ||
+       !config.publishableKey || String(config.publishableKey).startsWith('sb_secret_')) return null;
+    if(!sbPromise) sbPromise=new Promise((resolve,reject)=>{
+      if(window.supabase?.createClient) {resolve();return;}
+      const script=document.createElement('script');
+      const timeout=setTimeout(()=>{script.remove();sbPromise=null;reject(new Error('Supabase download timeout'));},10000);
+      script.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      script.onload=()=>{clearTimeout(timeout);window.supabase?.createClient?resolve():reject(new Error('Supabase client unavailable'));};
+      script.onerror=()=>{clearTimeout(timeout);sbPromise=null;reject(new Error('Supabase library load failed'));};
+      document.head.append(script);
+    });
+    try {
+      await sbPromise;
+      sbClient=window.supabase.createClient(config.url,config.publishableKey,{
+        auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+      });
+      return sbClient;
+    } catch(e) {console.warn(e);return null;}
   }
 
-  let raf = 0;
-  const px = value => parseFloat(value) || 0;
+  const localLikeKey='shun-wedding-heart-v1';
+  const visitorKey='shun-wedding-heart-visitor-v1';
+  const likeButton=$('likeButton');
+  let likesReady=false;
+  function localGet(key) {try{return localStorage.getItem(key);}catch{return null;}}
+  function localSet(key,value) {try{localStorage.setItem(key,value);}catch{/* storage may be disabled */}}
+  function setLiked(value) {
+    likeButton.classList.toggle('is-liked',value);
+    likeButton.setAttribute('aria-pressed',String(value));
+    likeButton.querySelector('.heart-symbol').textContent=value?'♥':'♡';
+    likeButton.setAttribute('aria-label',value?'축하 하트를 보냈습니다':'하트로 축하하기');
+    likeButton.disabled=value;
+  }
+  async function loadLikes() {
+    const client=await connectSupabase();
+    if(!client) {$('likeStatus').textContent='하트 기능은 Supabase 연결 후 이용할 수 있습니다.';return;}
+    try {
+      const {count,error}=await client.from('wedding_likes').select('id',{count:'exact',head:true});
+      if(error) throw error;
+      likesReady=true;
+      setText('likeCount',Number(count||0).toLocaleString('ko-KR'));
+      setLiked(localGet(localLikeKey)==='synced');
+      $('likeStatus').textContent='';
+    } catch(error) {
+      console.info('wedding_likes table unavailable:',error.message);
+      $('likeStatus').textContent='하트 집계를 사용하려면 동봉된 supabase-likes.sql을 1회 실행해 주세요.';
+    }
+  }
+  likeButton.addEventListener('click',async()=>{
+    if(!likesReady) {toast('하트 집계 연결을 먼저 확인해 주세요.');return;}
+    if(localGet(localLikeKey)==='synced') {toast('이미 축하 하트를 보내주셨어요.');return;}
+    likeButton.disabled=true;
+    try {
+      const client=await connectSupabase();
+      let visitor=localGet(visitorKey);
+      if(!visitor) {visitor=crypto?.randomUUID?.() || `visitor-${Date.now()}-${Math.random()}`;localSet(visitorKey,visitor);}
+      const {error}=await client.from('wedding_likes').insert({visitor_id:visitor});
+      if(error && error.code!=='23505') throw error;
+      localSet(localLikeKey,'synced');setLiked(true);
+      toast('축하의 하트가 전해졌습니다. 감사합니다 ♡');
+      await loadLikes();
+    } catch(error) {console.warn('Like failed',error);likeButton.disabled=false;toast('하트를 보내지 못했습니다. 다시 시도해 주세요.');}
+  });
 
-  function fit() {
-    raf = 0;
-    // The visible viewport may differ from CSS 100vh in Kakao / iOS.
-    const viewportHeight = window.visualViewport?.height || window.innerHeight;
-    const usableHeight = Math.max(270, Math.round(viewportHeight));
-    shell.style.setProperty('--mobile-visible-height', `${usableHeight}px`);
-
-    const mobile = document.documentElement.clientWidth <= 760;
-    const designWidth = LEAF_W;
-    const mainStyle = getComputedStyle(main);
-    const availableWidth = Math.max(1, main.clientWidth - px(mainStyle.paddingLeft) - px(mainStyle.paddingRight));
-    const availableHeight = Math.max(1, main.clientHeight - px(mainStyle.paddingTop) - px(mainStyle.paddingBottom));
-
-    // Never grow the book beyond the viewport width on first render.
-    const scale = Math.min(mobile ? 1 : 1.12, availableWidth / designWidth);
-    const leafHeight = Math.min(950, Math.max(300, Math.floor((availableHeight - 2) / scale)));
-
-    win.style.setProperty('--fit-scale', String(scale));
-    win.style.setProperty('--adaptive-leaf-height', `${leafHeight}px`);
-    frame.style.setProperty('--fit-width', `${Math.floor(designWidth * scale)}px`);
-    frame.style.setProperty('--fit-height', `${Math.floor(leafHeight * scale)}px`);
-    shell.style.setProperty('--scaled-book-width', `${Math.floor(designWidth * scale)}px`);
-    // Increase text on narrow devices to compensate for scale() shrinkage.
-    win.style.setProperty('--type-boost', String(Math.min(1.23, Math.max(1, 1 / scale))));
-    shell.classList.add('layout-ready');
+  function showMessageState(message) {
+    const li=document.createElement('li');li.className='empty-message';li.textContent=message;
+    $('guestbookList').replaceChildren(li);
+  }
+  /* Studio group portrait: front-facing groom and bride always stand in the center.
+   * Guests populate 3 standing tiers beside them; the horizontal stage widens as
+   * guests are added, with independent touch scrolling (no page-wide overflow).
+   */
+  const portraitViewport=$('portraitViewport');
+  const portraitLeft=$('portraitLeftGuests');
+  const portraitRight=$('portraitRightGuests');
+  const portraitParty=$('portraitParty');
+  function updatePortraitHint() {
+    const hasMore=portraitViewport.scrollWidth>portraitViewport.clientWidth+5;
+    $('portraitScrollHint').textContent=hasMore
+      ? '좌우로 밀어 더 많은 하객을 만나보세요.'
+      : '신랑·신부와 함께하는 우리의 원판사진';
+  }
+  function centerPortrait() {
+    const stage=$('portraitStage');
+    portraitViewport.scrollLeft=Math.max(0,(stage.scrollWidth-portraitViewport.clientWidth)/2);
+    updatePortraitHint();
+  }
+  addEventListener('resize',updatePortraitHint,{passive:true});
+  function renderRoom(rows,total=rows.length) {
+    portraitLeft.replaceChildren();portraitRight.replaceChildren();
+    setText('roomCounter',`${total.toLocaleString('ko-KR')}명의 하객`);
+    const sides=[[],[]];
+    rows.forEach((row,i)=>sides[i%2].push({row,index:i}));
+    // Preserve 3 empty columns beside the couple even with the first guest.
+    const columns=Math.max(3,Math.ceil(Math.max(sides[0].length,sides[1].length)/2));
+    portraitParty.style.setProperty('--portrait-columns',columns);
+    const partyWidth=columns*2*72+144;
+    portraitParty.style.setProperty('--portrait-width',`${partyWidth}px`);
+    $('portraitStage').style.setProperty('--stage-width',`${Math.max(710,partyWidth+36)}px`);
+    sides.forEach((items,side)=>{
+      const parent=side===0?portraitLeft:portraitRight;
+      items.forEach(({row,index},position)=>{
+        const meta=unpackMessage(row.message);
+        const button=document.createElement('button');button.type='button';button.className='portrait-avatar';
+        button.setAttribute('aria-label',`${row.name||'하객'}님의 축하 메시지 보기`);
+        const col=Math.floor(position/2);
+        button.style.gridColumn=side===0?String(columns-col):String(col+1);
+        const rowOrder=[2,1];
+        const rowNumber=rowOrder[position%2];
+        button.style.gridRow=String(rowNumber);
+        button.classList.add(rowNumber===1?'is-upper':'is-lower');
+        const name=document.createElement('span');
+        name.className='portrait-avatar-name';
+        // Show at most four user-perceived characters, preserving the full name
+        // in the button's accessible label and the actual guestbook message.
+        const fullName=String(row.name||'하객');
+        const compactName=fullName.replace(/\s+/g,'');
+        const units=(typeof Intl.Segmenter==='function')
+          ? [...new Intl.Segmenter('ko',{granularity:'grapheme'}).segment(compactName)].map(part=>part.segment)
+          : Array.from(compactName);
+        name.textContent=units.slice(0,4).join('');
+        button.append(avatarImage(meta.avatar),name);
+        button.addEventListener('click',()=>{
+          void showMessagePageFor(index);
+        });parent.append(button);
+      });
+    });
+    requestAnimationFrame(centerPortrait);
+  }
+  // Compact guestbook list, 3 messages per page. Supabase's existing
+  // batch loader still supplies the portrait and fetches more as required.
+  const MESSAGES_PER_PAGE=3;
+  let messagePage=0;
+  function renderMessagePage() {
+    const pages=Math.max(1,Math.ceil(guestTotal/MESSAGES_PER_PAGE));
+    messagePage=Math.max(0,Math.min(messagePage,pages-1));
+    setText('messagePageIndicator',`${pad(messagePage+1)} / ${pad(pages)}`);
+    $('messagePagination').hidden=guestTotal<=MESSAGES_PER_PAGE;
+    $('messagePrev').disabled=messagePage<=0;
+    $('messageNext').disabled=messagePage>=pages-1;
+    const list=$('guestbookList');list.replaceChildren();
+    if(guestTotal===0) {showMessageState('아직 남겨진 메시지가 없습니다. 첫 번째 하객이 되어 주세요.');return;}
+    const start=messagePage*MESSAGES_PER_PAGE;
+    const pageRows=guestRows.slice(start,start+MESSAGES_PER_PAGE);
+    if(!pageRows.length){showMessageState('메시지를 불러오는 중입니다.');return;}
+    pageRows.forEach((r,localIndex)=>{
+      const index=start+localIndex;
+      const meta=unpackMessage(r.message);
+      const li=document.createElement('li');li.className='message-entry';li.id=`guest-entry-${index}`;
+      const avatar=document.createElement('div');avatar.className='message-avatar';avatar.append(avatarImage(meta.avatar));
+      const info=document.createElement('div');info.className='message-copy';
+      const name=document.createElement('div');name.className='message-name';
+      const strong=document.createElement('strong');strong.textContent=String(r.name||'하객');name.append(strong);
+      const date=document.createElement('time');date.className='message-time';date.dateTime=String(r.created_at||'');
+      const parsed=new Date(r.created_at);date.textContent=Number.isNaN(parsed.getTime())?'':new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).format(parsed);
+      const p=document.createElement('p');p.textContent=meta.message;
+      info.append(name,date,p);li.append(avatar,info);list.append(li);
+    });
+  }
+  function renderGuestbook(rows,total=rows.length) {
+    setText('messageCount',`(${total.toLocaleString('ko-KR')})`);
+    renderRoom(rows,total);
+    renderMessagePage();
+  }
+  async function showMessagePageFor(index,scroll=true) {
+    if(index<0 || index>=guestTotal) return;
+    const nextPage=Math.floor(index/MESSAGES_PER_PAGE);
+    // Pull further batches on demand so all pages remain reachable even
+    // when there are hundreds of guests, without heavy initial requests.
+    while(guestRows.length<=index && guestRows.length<guestTotal) {
+      const before=guestRows.length;
+      await fetchGuestPage();
+      if(guestRows.length===before) break;
+    }
+    if(guestRows.length<=index){toast('메시지를 불러오지 못했습니다. 다시 시도해 주세요.');return;}
+    messagePage=nextPage;
+    renderMessagePage();
+    if(scroll) {
+      const entry=$(`guest-entry-${index}`);
+      if(entry) {
+        entry.scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'center'});
+        entry.classList.add('is-highlighted');
+        setTimeout(()=>entry.classList.remove('is-highlighted'),2000);
+      }
+    }
+  }
+  const GUEST_PAGE_SIZE=80;
+  let guestFetchSequence=0,guestRows=[],guestTotal=0,loadingMoreGuests=false;
+  function updateMoreGuests() {
+    const more=$('loadMoreGuests');
+    more.hidden=guestRows.length>=guestTotal;
+    more.textContent=`이전 축하 메시지와 하객 더 보기 (${guestRows.length} / ${guestTotal}) ↓`;
+  }
+  async function fetchGuestPage({reset=false}={}) {
+    if(loadingMoreGuests) return;
+    const sequence=reset?++guestFetchSequence:guestFetchSequence;
+    if(reset) messagePage=0;
+    const client=await connectSupabase();
+    if(!client) {showMessageState('방명록 연결 설정을 확인해 주세요.');return;}
+    loadingMoreGuests=true;
+    $('refreshGuestbook').disabled=true;
+    $('loadMoreGuests').disabled=true;
+    try {
+      const offset=reset?0:guestRows.length;
+      const {data,count,error}=await client.from('wedding_guestbook')
+        .select('name,message,created_at',{count:'exact'})
+        .order('created_at',{ascending:false}).range(offset,offset+GUEST_PAGE_SIZE-1);
+      if(error) throw error;
+      if(sequence!==guestFetchSequence) return;
+      guestRows=reset?(data||[]):guestRows.concat(data||[]);
+      guestTotal=count??guestRows.length;
+      renderGuestbook(guestRows,guestTotal);
+      updateMoreGuests();
+    } catch(error) {
+      console.warn('Guestbook read failed:',error);
+      if(sequence===guestFetchSequence) showMessageState('축하 메시지를 불러오지 못했습니다. 새로고침을 눌러 주세요.');
+    } finally {
+      loadingMoreGuests=false;
+      $('refreshGuestbook').disabled=false;
+      $('loadMoreGuests').disabled=false;
+    }
+  }
+  async function loadGuestbook() {guestRows=[];await fetchGuestPage({reset:true});}
+  $('loadMoreGuests').addEventListener('click',()=>fetchGuestPage());
+  $('messagePrev').addEventListener('click',()=>{
+    if(messagePage>0) {messagePage--;renderMessagePage();}
+  });
+  $('messageNext').addEventListener('click',()=>{
+    if((messagePage+1)*MESSAGES_PER_PAGE<guestTotal) {
+      void showMessagePageFor((messagePage+1)*MESSAGES_PER_PAGE,false);
+    }
+  });
+  $('refreshGuestbook').addEventListener('click',loadGuestbook);
+  $('guestbookForm').addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(saving) return;
+    const name=$('guestName').value.trim();
+    const message=$('guestMessage').value.trim();
+    if($('guestHomepage').value.trim()) return; // very simple bot honeypot
+    if(!name || name.length>20 || message.length<2 || message.length>240) {
+      setText('guestFormStatus','이름(20자 이내)과 메시지(2~240자)를 확인해 주세요.');return;
+    }
+    const client=await connectSupabase();
+    if(!client) {setText('guestFormStatus','방명록 연결 설정을 확인해 주세요.');return;}
+    const stamp=Number(localGet('shun-last-message')||0);
+    if(Date.now()-stamp<12000){setText('guestFormStatus','연속 등록은 12초 후에 가능합니다.');return;}
+    saving=true; $('guestSubmit').disabled=true;setText('guestFormStatus','축하 메시지를 전하고 있어요…');
+    try {
+      const payload=packMessage(message,avatarChoice);
+      const {error}=await client.from('wedding_guestbook').insert({name,message:payload});
+      if(error) throw error;
+      localSet('shun-last-message',Date.now());
+      $('guestbookForm').reset();avatarChoice=0;refreshPickers();
+      setText('guestFormStatus','소중한 축하를 남겨주셔서 고맙습니다!');
+      toast('우리의 단체사진에 함께했어요 ♡');
+      await loadGuestbook();
+    } catch(error) {console.warn('Guestbook insert failed:',error);setText('guestFormStatus','메시지 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');}
+    finally {saving=false;$('guestSubmit').disabled=false;}
+  });
+  function initBackend() {
+    if(backendStarted) return;
+    backendStarted=true;
+    // Failures are explained in the UI. Never pretend a local like is global.
+    loadGuestbook();loadLikes();
   }
 
-  function queueFit() {
-    if (raf) return;
-    raf = requestAnimationFrame(fit);
-  }
-
-  queueFit();
-  window.addEventListener('resize', queueFit);
-  window.addEventListener('orientationchange', queueFit);
-  window.visualViewport?.addEventListener('resize', queueFit);
-  document.fonts?.ready.then(queueFit);
+  /* Gentle motion, never require animation for content to exist. */
+  root.classList.add('js-enhanced');
+  if('IntersectionObserver' in window && !reducedMotion) {
+    const io=new IntersectionObserver(entries=>entries.forEach(entry=>{
+      if(entry.isIntersecting){entry.target.classList.add('is-visible');io.unobserve(entry.target);}
+    }),{rootMargin:'0px 0px 55px 0px',threshold:.06});
+    document.querySelectorAll('[data-reveal]').forEach(el=>io.observe(el));
+  } else document.querySelectorAll('[data-reveal]').forEach(el=>el.classList.add('is-visible'));
 })();
