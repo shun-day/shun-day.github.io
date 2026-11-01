@@ -77,28 +77,14 @@
       setTimeout(() => finishOpening(target), immediate || reducedMotion ? 0 : 550);
     }, duration);
   }
-
-/* 봉투를 열면 배경음악 자동 재생 */
-function playOpeningMusic() {
-  const audio = document.getElementById('weddingBackgroundMusic');
-
-  if (!audio) return;
-
-  audio.volume = 0.35;
-
-  audio.play().catch(() => {
-  });
-}
-
-$('openEnvelope').addEventListener('click', () => {
-  playOpeningMusic();
-  openInvitation();
-});
-
-$('openTextButton').addEventListener('click', () => {
-  playOpeningMusic();
-  openInvitation();
-});
+  // The envelope tap is the user's gesture. Play music here, not after animation.
+  // iOS/Android may block any unprompted sound; keep a working manual toggle.
+  function openWithMusic() {
+    attemptOpeningMusic();
+    openInvitation();
+  }
+  $('openEnvelope').addEventListener('click', openWithMusic);
+  $('openTextButton').addEventListener('click', openWithMusic);
 
   /* Old invitation hashes must continue working for links already shared. */
   const oldHash = location.hash.match(/^#\/chapter\/(cover|contents|story|day|venue|gallery|guestbook|love)$/)?.[1];
@@ -107,26 +93,45 @@ $('openTextButton').addEventListener('click', () => {
     openInvitation(location.hash.slice(1), true);
   }
 
-  /* Preserve the original optional background track without the old book DOM. */
+  /* Music starts from the envelope-opening gesture when the browser permits it.
+   * The icon always reflects REAL playback state; never show mute if blocked.
+   */
   const music=$('weddingBackgroundMusic');
   const musicToggle=$('musicToggle');
   music.volume=.55;
-  musicToggle.addEventListener('click',async()=>{
-    if (!music.paused) {music.pause();return;}
-    try {await music.play();}
-    catch (error) {console.info('Music unavailable:',error);toast('음원 재생이 제한되었습니다. Antifreeze.mp3 파일을 확인해 주세요.');}
-  });
+  music.preload='auto';
+  let musicDesired=true; // initial preference: on after invitation is opened
   function updateMusicButton() {
     const playing=!music.paused&&!music.ended;
     musicToggle.classList.toggle('is-playing',playing);
     musicToggle.setAttribute('aria-pressed',String(playing));
-    musicToggle.setAttribute('aria-label',playing?'배경음악 끄기':'배경음악 켜기');
-    musicToggle.title=playing?'배경음악 끄기':'배경음악 켜기';
-    musicToggle.textContent=playing?'♫':'♪';
+    musicToggle.setAttribute('aria-label',playing?'배경음악 음소거':'배경음악 재생');
+    musicToggle.title=playing?'배경음악 음소거':'배경음악 재생';
   }
+  function attemptOpeningMusic(showError=false) {
+    musicDesired=true;
+    try {
+      const promise=music.play();
+      if(promise && typeof promise.catch==='function') promise.catch(error=>{
+        updateMusicButton();
+        if(showError) toast('배경음악을 재생할 수 없습니다. 음원 파일을 확인해 주세요.');
+        else console.info('Background music could not autoplay from invitation opening:',error);
+      });
+    } catch(error) {
+      updateMusicButton();
+      if(showError) toast('배경음악 재생이 제한되었습니다.');
+    }
+  }
+  musicToggle.addEventListener('click',()=>{
+    if(!music.paused && !music.ended) {
+      musicDesired=false;
+      music.pause();
+    } else attemptOpeningMusic(true);
+  });
   music.addEventListener('play',updateMusicButton);
   music.addEventListener('pause',updateMusicButton);
   music.addEventListener('ended',updateMusicButton);
+  music.addEventListener('error',updateMusicButton);
   updateMusicButton();
 
   /* Header menu stays available even when the large 2×3 menu is far above. */
@@ -150,16 +155,16 @@ $('openTextButton').addEventListener('click', () => {
   }));
 
   /* Content from existing data.js, no hardcoded couple/venue. */
-  setText('envelopeNames', `${W.groom} & ${W.bride}`);
+  setText('envelopeNames', `${W.groom} · ${W.bride}`);
   setText('envelopeDate', fullDate());
-  setText('envelopePrintedNames', `${W.groom}  &  ${W.bride}`);
+  setText('envelopePrintedNames', `${W.groom}  ·  ${W.bride}`);
   setText('envelopePrintedDate', fullDate());
-  $('heroNames').innerHTML = `${escapeHTML(W.bride)} <span>&amp;</span> ${escapeHTML(W.groom)}`;
+  $('heroNames').innerHTML = `${escapeHTML(W.bride)} <span class="name-separator" aria-hidden="true">·</span> ${escapeHTML(W.groom)}`;
   setText('heroLocation', `${W.venue} · ${W.hall}`);
   setText('heroDate', `${fullDate()} ${weekdays[new Date(dateParts[0],dateParts[1]-1,dateParts[2]).getDay()]}`);
   setText('invitationText', W.greeting);
-  $('storySignature').innerHTML = `${escapeHTML(W.bride)} <span>&amp;</span> ${escapeHTML(W.groom)}`;
-  setText('footerNames', `${W.bride} & ${W.groom}`);
+  $('storySignature').innerHTML = `${escapeHTML(W.bride)} <span class="name-separator" aria-hidden="true">·</span> ${escapeHTML(W.groom)}`;
+  setText('footerNames', `${W.groom} · ${W.bride}`);
 
   function assignPhoto(id, candidates) {
     const img = $(id);
@@ -421,7 +426,7 @@ $('openTextButton').addEventListener('click', () => {
     {name:'남성 3',image:'assets/guest-08-v15.webp'},
     {name:'남성 4',image:'assets/guest-09-v15.webp'},
     {name:'남성 5',image:'assets/guest-10-v15.webp'},
-    {name:'남성 6',image:'assets/guest-11-v15.webp'}
+    {name:'남성 6',image:'assets/guest-11-v15.webp'},
   ];
   const selectableAvatarIds = Array.from({length:avatars.length},(_,i)=>i);
   function avatarImage(index) {

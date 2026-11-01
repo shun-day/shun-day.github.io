@@ -3,8 +3,8 @@
   --body:#514a44; --muted:#827a71; --line:#dcd5cb; --accent:#783e46;
   --accent-dark:#542e33; --rose:#b98184; --soft-rose:#f1e6e4;
   --serif:'Cormorant Garamond','Times New Roman',serif;
-  --korean:'Gowun Batang','Noto Serif KR',serif;
-  --sans:'DM Sans','Noto Serif KR',sans-serif;
+  --korean:'Noto Serif KR',serif;
+  --sans:'Noto Serif KR',serif;
   --max:660px;
 }
 *,*::before,*::after {box-sizing:border-box}
@@ -1236,49 +1236,83 @@ html {scroll-padding-top:calc(78px + env(safe-area-inset-top,0px))}
 @media(max-width:374px) { .character-option .pixel-avatar{width:50px;height:69px} }
 
 
-/* 원판사진 무대 높이 축소 */
-.portrait-stage {
-  height: 420px;
-  min-height: 420px;
-  padding: 0;
-  background-size: auto 100%;
-  background-position: center bottom;
+/* v16 — typography system: two typefaces only.
+   Korean copy/utility text: Noto Serif KR (strong, legible at phone size).
+   English display headings: Cormorant Garamond. No ornamental italic ampersands.
+*/
+.header-brand span {
+  font:500 .58em/1 var(--korean);
+  vertical-align:middle;
+  display:inline-block;
+  margin-inline:2px;
+  color:var(--accent);
 }
-
-/* 캐릭터를 무대 하단에 배치 */
-.portrait-party {
-  bottom: 52px;
+.hero-names .name-separator,
+.signature .name-separator {
+  font-family:var(--korean);
+  font-style:normal;
+  font-weight:500;
+  color:#967478;
+  vertical-align:middle;
+  display:inline-block;
+  line-height:1;
+  letter-spacing:0;
 }
-
-/* 상하 장식 문구 위치 */
-.portrait-topline {
-  top: 14px;
+.hero-names .name-separator {
+  font-size:.46em;
+  margin:0 .32em;
+  transform:translateY(-.06em);
 }
-
-.portrait-bottomline {
-  bottom: 12px;
+.signature .name-separator {
+  font-size:.82em;
+  margin:0 .65em;
+  transform:translateY(-.06em);
 }
+.envelope-card-names {font-family:var(--korean);font-weight:700;font-size:clamp(17px,4.7vw,23px);letter-spacing:.02em}
+/* Deliberate typography hierarchy: fine English for display, bold KR for phones. */
+.section-korean,.invitation-text,.quick-link strong,.signature,.day-readable,
+.transport-item,.message-copy,.field-label {font-family:var(--korean)}
+.section-topline,.eyebrow,.quick-link small,.hero-date,.gallery-page-meta,
+.portrait-topline,.portrait-bottomline,.header-caption {font-family:var(--sans)}
+.section-topline,.eyebrow,.header-caption {letter-spacing:.12em}
+.hero-names {letter-spacing:-.045em}
+.signature {letter-spacing:.05em}
 
-/* 작은 모바일 */
-@media (max-width: 374px) {
-  .portrait-stage {
-    height: 400px;
-    min-height: 400px;
-  }
-
-  .portrait-party {
-    bottom: 48px;
-  }
+/* Speaker/mute icon: crisp CSS geometry instead of emoji or inline SVG.
+   While music plays, show a crossed-out speaker (action = turn sound off).
+   If stopped/blocked, show a speaker with a wave (action = play sound).
+*/
+.music-toggle {
+  display:grid;
+  place-items:center;
+  width:44px;min-width:44px;height:44px;min-height:44px;
+  padding:0;border:0;background:transparent;
+  color:#8b6268;
+  border-radius:50%;
+  -webkit-tap-highlight-color:transparent;
 }
-
-/* 태블릿 이상 */
-@media (min-width: 620px) {
-  .portrait-stage {
-    height: 450px;
-    min-height: 450px;
-  }
-
-  .portrait-party {
-    bottom: 58px;
-  }
+.music-toggle.is-playing {color:var(--accent);text-shadow:none}
+.music-toggle .sound-icon {position:relative;width:24px;height:24px;display:block;flex-shrink:0}
+.music-toggle .speaker-glyph::before {
+  content:'';position:absolute;left:3px;top:9px;width:7px;height:7px;
+  border:1.8px solid currentColor;border-right:0;border-radius:1px;
 }
+.music-toggle .speaker-glyph::after {
+  content:'';position:absolute;left:9px;top:5px;
+  width:9px;height:15px;background:currentColor;
+  clip-path:polygon(0% 27%,87% 0%,87% 100%,0% 73%);
+}
+.music-toggle .sound-arc {
+  position:absolute;right:1px;top:7px;width:7px;height:11px;
+  border:1.8px solid currentColor;border-left:0;
+  border-radius:0 100% 100% 0;
+}
+.music-toggle .sound-slash {
+  position:absolute;left:1px;top:11px;width:25px;height:2px;
+  background:var(--paper);border-top:1.5px solid currentColor;
+  transform:rotate(-42deg);transform-origin:center;
+  display:none;
+}
+.music-toggle.is-playing .sound-arc {display:none}
+.music-toggle.is-playing .sound-slash {display:block}
+.music-toggle:focus-visible {outline:2px solid var(--accent);outline-offset:2px}

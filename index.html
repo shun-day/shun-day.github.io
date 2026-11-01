@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f7f4ef">
   <meta name="description" content="대영과 시연, 저희 두 사람의 새로운 시작에 초대합니다.">
-  <title>대영 & 시연 | 우리의 결혼식</title>
+  <title>대영 · 시연 | 우리의 결혼식</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Sans:wght@400;500;600;700&family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- 기존 예식 정보와 사진 경로, Supabase 공개키 설정은 그대로 사용합니다. -->
-  <link rel="stylesheet" href="styles.css?v=characters-v13-headroom">
+  <link rel="stylesheet" href="styles.css?v=editorial-type-v16">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ko_KR">
   <meta property="og:title" content="대영 & 시연 | 우리의 결혼식에 초대합니다">
@@ -20,7 +20,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <script src="data.js" defer></script>
   <script src="guestbook-config.js" defer></script>
-  <script src="app.js?v=characters-v13-headroom" defer></script>
+  <script src="app.js?v=editorial-music-v16" defer></script>
 </head>
 <body>
   <!-- First view: formal paper envelope with embossed silver WebP seal. -->
@@ -33,7 +33,7 @@
         <div class="envelope-back"></div>
         <div class="envelope-letter">
           <span class="envelope-card-kicker">TO OUR DEAREST GUESTS</span>
-          <span class="envelope-card-names" id="envelopeNames">신랑 &amp; 신부</span>
+          <span class="envelope-card-names" id="envelopeNames">신랑 · 신부</span>
           <span class="envelope-card-date" id="envelopeDate"></span>
         </div>
         <div class="envelope-front"></div>
@@ -55,7 +55,7 @@
       <a href="#home" class="header-brand" aria-label="맨 위로">27.04.03</a>
       <span class="header-caption">OUR WEDDING</span>
       <div class="header-tools">
-        <button type="button" class="music-toggle" id="musicToggle" aria-pressed="false" aria-label="배경음악 켜기" title="배경음악 켜기">♫</button>
+        <button type="button" class="music-toggle" id="musicToggle" aria-pressed="false" aria-label="배경음악 켜기" title="배경음악 켜기"><span class="sound-icon" aria-hidden="true"><span class="speaker-glyph"></span><span class="sound-arc"></span><span class="sound-slash"></span></span></button>
         <button type="button" class="header-menu" id="menuToggle" aria-expanded="false" aria-controls="quickMenuOverlay" aria-label="바로가기 메뉴 열기"><span class="menu-lines" aria-hidden="true"><i></i><i></i></span> 메뉴</button>
       </div>
     </header>
@@ -64,7 +64,7 @@
     <main>
       <section class="hero section-container" id="home" aria-label="청첩장 표지">
         <div class="hero-kicker">THE WEDDING OF</div>
-        <h2 class="hero-names" id="heroNames">대영 <span>&amp;</span> 시연</h2>
+        <h2 class="hero-names" id="heroNames">대영 <span class="name-separator" aria-hidden="true">·</span> 시연</h2>
         <div class="hero-photo-wrap" id="heroPhotoWrap">
           <span class="hero-photo-label">A LOVE TO REMEMBER</span>
           <img id="heroPhoto" src="images/MYBOX/AAC_0109.jpg" alt="신랑 신부 웨딩 사진" fetchpriority="high" decoding="async">
@@ -104,7 +104,7 @@
         </div>
         <figure class="story-photo" data-reveal><img id="storyPhoto" alt="신랑 신부의 웨딩 사진" loading="lazy"><figcaption>LOVE IS IN THE LITTLE THINGS</figcaption></figure>
         <p id="invitationText" class="invitation-text" data-reveal></p>
-        <div class="signature" id="storySignature" data-reveal>대영 <span>&amp;</span> 시연</div>
+        <div class="signature" id="storySignature" data-reveal>대영 <span class="name-separator" aria-hidden="true">·</span> 시연</div>
       </section>
 
       <section class="day-section content-section" id="day" aria-labelledby="dayTitle">
@@ -135,7 +135,7 @@
           <h2 class="serif-title" id="galleryTitle">Our <em>memories</em></h2>
           <p class="section-korean">서로를 바라보던 순간들을 담았습니다.</p>
         </div>
-        <div class="gallery-editorial-note" aria-hidden="true">A COLLECTION OF MOMENTS</div>
+        <div class="gallery-editorial-note" aria-hidden="true">A COLLECTION OF MOMENTS · 01—FOREVER</div>
         <div class="gallery-page-meta"><span id="galleryPageLabel">01 — 04</span><span id="galleryTotalCount">THE COLLECTION</span></div>
         <div id="galleryRail" class="gallery-rail" role="region" tabindex="0" aria-label="웨딩 사진 가로 슬라이드. 손가락으로 좌우로 이동하거나 키보드 방향키를 사용하세요.">
           <div id="photoGrid" class="gallery-slide-track"></div>
@@ -156,7 +156,7 @@
             <h2 class="serif-title" id="venueTitle">Find <em>your way</em></h2>
             <p class="section-korean">오시는 길</p>
           </div>
-          <div class="venue-card" data-reveal>
+          <div class="venue-card" data-reveal>  
             <p class="venue-card-label">WEDDING VENUE</p>
             <h3 id="venueName"></h3>
             <p id="venueHall"></p>
@@ -175,7 +175,7 @@
           <p class="section-korean">한 장의 단체사진에 축하의 마음을 모아 주세요.</p>
         </div>
         <div class="heart-card" data-reveal>
-          <div><p class="heart-title">YOUR LOVE MAKES OUR DAY</p><strong>하트를 보내 축하를 전달해주세요</strong><span>축하해 주신 소중한 마음 오래 간직하겠습니다.</span></div>
+          <div><p class="heart-title">YOUR LOVE MAKES OUR DAY</p><strong>하트 하나로 축하해 주세요.</strong><span>축하해 주신 마음을 오래 기억할게요.</span></div>
           <button id="likeButton" class="like-button" type="button" aria-pressed="false" aria-label="하트로 축하하기"><span class="heart-symbol" aria-hidden="true">♡</span><b id="likeCount">—</b></button>
         </div>
         <p class="like-status" id="likeStatus" role="status" aria-live="polite"></p>
@@ -230,7 +230,7 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer"><p>Thank you for being part of our story.</p><span id="footerNames">D &amp; S</span><a href="#home">BACK TO TOP ↑</a></footer>
+    <footer class="site-footer"><p>Thank you for being part of our story.</p><span id="footerNames">D · S</span><a href="#home">BACK TO TOP ↑</a></footer>
   </div>
 
   <div class="quick-menu-overlay" id="quickMenuOverlay" hidden>
