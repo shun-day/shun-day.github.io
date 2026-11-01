@@ -189,8 +189,8 @@
   /* Date and calendar options: Google event template + Naver manual entry. */
   const koWeekdays = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   const koreanWeekday = koWeekdays[new Date(dateParts[0],dateParts[1]-1,dateParts[2]).getDay()];
-  setText('dayMonthNumber', string(dateParts[1]));
-  setText('dayNumber', string(dateParts[2]));
+  setText('dayMonthNumber', String(dateParts[1]));
+  setText('dayNumber', String(dateParts[2]));
   setText('dayWeekday', koreanWeekday);
   setText('dayDateWeekday', koreanWeekday);
   $('dayLarge').setAttribute('aria-label',`${dateParts[0]}년 ${dateParts[1]}월 ${dateParts[2]}일 결혼식 날짜`);
