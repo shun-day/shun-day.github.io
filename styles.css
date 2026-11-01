@@ -560,7 +560,7 @@ html {scroll-padding-top:calc(78px + env(safe-area-inset-top,0px))}
 .portrait-stage {
   background-color:#f3ece2;
   background-image:linear-gradient(180deg,rgba(253,250,245,.09),rgba(247,238,229,.08)),url('assets/wedding-ceremony-hall.webp');
-  background-position:center center;
+  background-position:calc(50% + 12px) center;
   background-size:auto,auto 100%;
   background-repeat:no-repeat,repeat-x;
 }
