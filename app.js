@@ -77,8 +77,28 @@
       setTimeout(() => finishOpening(target), immediate || reducedMotion ? 0 : 550);
     }, duration);
   }
-  $('openEnvelope').addEventListener('click', () => openInvitation());
-  $('openTextButton').addEventListener('click', () => openInvitation());
+
+/* 봉투를 열면 배경음악 자동 재생 */
+function playOpeningMusic() {
+  const audio = document.getElementById('weddingBackgroundMusic');
+
+  if (!audio) return;
+
+  audio.volume = 0.55;
+
+  audio.play().catch(() => {
+  });
+}
+
+$('openEnvelope').addEventListener('click', () => {
+  playOpeningMusic();
+  openInvitation();
+});
+
+$('openTextButton').addEventListener('click', () => {
+  playOpeningMusic();
+  openInvitation();
+});
 
   /* Old invitation hashes must continue working for links already shared. */
   const oldHash = location.hash.match(/^#\/chapter\/(cover|contents|story|day|venue|gallery|guestbook|love)$/)?.[1];
