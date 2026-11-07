@@ -166,7 +166,23 @@
   }
 
   setText('heroLocation', `${W.venue} · ${W.hall}`);
-  setText('heroDate', `${fullDate()} ${weekdays[new Date(dateParts[0],dateParts[1]-1,dateParts[2]).getDay()]}`);
+
+  const weddingDay = new Date(
+    dateParts[0],
+    dateParts[1] - 1,
+    dateParts[2]
+  );
+  
+  const shortWeekdays = [
+    'SUN.', 'MON.', 'TUE.', 'WED.',
+    'THU.', 'FRI.', 'SAT.'
+  ];
+  
+  setText(
+    'heroDate',
+    `${fullDate()} ${shortWeekdays[weddingDay.getDay()]} ${W.time || '17:00'}`
+  );
+  
   setText('invitationText', W.greeting);
   $('storySignature').innerHTML = `${escapeHTML(W.bride)} <span class="name-separator" aria-hidden="true">·</span> ${escapeHTML(W.groom)}`;
 

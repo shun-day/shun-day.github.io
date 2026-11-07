@@ -54,7 +54,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .hero-photo-wrap img {height:auto;width:100%;aspect-ratio:3/3.8;object-fit:cover;object-position:center 30%;background:#ece6de}
 .hero-photo-label {position:absolute;left:-15px;top:27px;writing-mode:vertical-rl;transform:rotate(180deg);z-index:3;font:600 9px var(--sans);letter-spacing:.18em;color:var(--accent)}
 .photo-index {position:absolute;right:13px;bottom:7px;font:600 9px var(--sans);letter-spacing:.2em;color:#907f76}
-.hero-bottom {padding:25px 0 15px}.hero-script {font:italic 500 32px/1 var(--serif);color:var(--accent);margin:0 0 17px}.hero-date {font:600 12px var(--sans);letter-spacing:.13em;margin:0 0 9px}.hero-location {font:700 12px var(--korean);color:#786e66;margin:0}
+.hero-bottom {padding:25px 0 15px}.hero-script {font:italic 500 32px/1 var(--serif);color:var(--accent);margin:0 0 17px}.hero-date {font:600 15px var(--sans);letter-spacing:.13em;margin:0 0 9px}.hero-location {font:700 15px var(--korean);color:#786e66;margin:0}
 .hero-scroll {display:flex;flex-direction:column;align-items:center;gap:13px;margin-top:28px;font:600 9px var(--sans);letter-spacing:.16em;color:#9c8f82}.hero-scroll span {font:19px var(--serif)}
 
 /* Large touch-friendly menu, not tiny traditional book TOC */
